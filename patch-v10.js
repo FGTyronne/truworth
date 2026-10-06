@@ -105,41 +105,62 @@
     form.addEventListener('input', () => preview(financial || preferred || 'GBP'));
   }
 
-  async function guardQuickVote(event) {
-    const button = event.target.closest?.('.snap-quick-vote');
-    if (!button) return;
+  async function safeSaveFinancialProfile(event) {
     await load();
-    const assessmentCurrency = valid(document.getElementById('currency')?.value);
-    const basis = financial || preferred || 'GBP';
-    if (!assessmentCurrency || assessmentCurrency === basis) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    const mount = button.closest('.snap-candidates') || button.parentElement;
-    if (!mount?.querySelector('.currency-vote-warning')) {
-      const note = document.createElement('div');
-      note.className = 'quick-vote-note currency-vote-warning';
-      note.innerHTML = `<strong>Confirm the price in ${basis} first</strong><span>This product is currently ${assessmentCurrency}. TruWorth+ will not compare it with your ${basis} financial profile until you enter a confirmed equivalent price.</span>`;
-      mount?.appendChild(note);
+    if (!signed()) return;
+    const status = document.getElementById('financialStatus');
+    const code = financial || preferred || 'GBP';
+    const numberOrNull = (id) => {
+      const raw = document.getElementById(id)?.value;
+      return raw === '' || raw == null ? null : Number(raw);
+    };
+    const payload = {
+      user_id: user.id,
+      currency: code,
+      income_amount: numberOrNull('incomeAmount'),
+      income_period: document.getElementById('incomePeriod')?.value || 'monthly',
+      essential_outgoings_monthly: numberOrNull('essentialOutgoings'),
+      debt_commitments_monthly: numberOrNull('debtCommitments'),
+      savings_target_monthly: numberOrNull('savingsTarget'),
+      updated_at: new Date().toISOString(),
+    };
+    try {
+      if (status) status.textContent = 'Saving…';
+      const {error} = await supabaseClient.from('financial_profiles').upsert(payload,{onConflict:'user_id'});
+      if (error) throw error;
+      financial = code;
+      const hidden = document.getElementById('preferredCurrencySelect');
+      if (hidden) { hidden.innerHTML = `<option value="${code}">${code}</option>`; hidden.value = code; }
+      moneySymbols(code, document.querySelector('#financial-profile .financial-form'));
+      preview(code);
+      if (status) { status.textContent = `Private financial context saved in ${code}.`; status.className = 'form-message success'; }
+    } catch (error) {
+      console.error(error);
+      if (status) { status.textContent = 'We could not save your financial context.'; status.className = 'form-message error'; }
     }
   }
 
+  window.addEventListener('submit', (event) => {
+    if (event.target?.id !== 'financialForm') return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    safeSaveFinancialProfile(event);
+  }, true);
+
   document.addEventListener('click', (event) => {
-    if (event.target.closest?.('.snap-quick-vote')) {
-      const assessmentCurrency = valid(document.getElementById('currency')?.value);
-      const basis = financial || preferred || valid(typeof local !== 'undefined' ? local?.settings?.preferred_currency : null) || 'GBP';
-      if (assessmentCurrency && assessmentCurrency !== basis) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        const button = event.target.closest('.snap-quick-vote');
-        const mount = button.closest('.snap-candidates') || button.parentElement;
-        if (!mount?.querySelector('.currency-vote-warning')) mount?.insertAdjacentHTML('beforeend', `<div class="quick-vote-note currency-vote-warning"><strong>Confirm the price in ${basis} first</strong><span>This product is currently ${assessmentCurrency}. TruWorth+ will not compare it with your ${basis} financial profile until you enter a confirmed equivalent price.</span></div>`);
-      }
+    if (!event.target.closest?.('.snap-quick-vote')) return;
+    const assessmentCurrency = valid(document.getElementById('currency')?.value);
+    const basis = financial || preferred || valid(typeof local !== 'undefined' ? local?.settings?.preferred_currency : null) || 'GBP';
+    if (assessmentCurrency && assessmentCurrency !== basis) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const button = event.target.closest('.snap-quick-vote');
+      const mount = button.closest('.snap-candidates') || button.parentElement;
+      if (!mount?.querySelector('.currency-vote-warning')) mount?.insertAdjacentHTML('beforeend', `<div class="quick-vote-note currency-vote-warning"><strong>Confirm the price in ${basis} first</strong><span>This product is currently ${assessmentCurrency}. TruWorth+ will not compare it with your ${basis} financial profile until you enter a confirmed equivalent price.</span></div>`);
     }
   }, true);
 
-  function enhance() {
-    stabiliseProfileCurrency();
-  }
+  function enhance() { stabiliseProfileCurrency(); }
 
   const observer = new MutationObserver(() => {
     clearTimeout(timer);

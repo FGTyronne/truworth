@@ -1,1 +1,34 @@
-(async()=>{const files=['core-v2.js?v=20261007a','tone-v4.js?v=20261007a','assess-v2.js?v=20261007a','library-v2.js?v=20261007a','account-v2.js?v=20261007a','release-v6.js?v=20261007a','snap-v7.js?v=20261007a','snap-nearby-v8.js?v=20261007a','patch-v9.js?v=20261007a','patch-v10.js?v=20261007a','patch-v11.js?v=20261007a','patch-v12.js?v=20261007a','patch-v13.js?v=20261007a'];for(const src of files){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=resolve;s.onerror=reject;document.head.appendChild(s);});}})().catch((error)=>{console.error('TruWorth failed to start',error);document.body.innerHTML='<main style="font:16px system-ui;padding:40px;max-width:680px;margin:auto"><h1>TruWorth</h1><p>We could not start the app. Refresh the page and try again.</p></main>';});
+(async()=>{
+  const version='20261007b';
+  const files=[
+    'core-v2.js',
+    'boot-gate.js',
+    'tone-v4.js',
+    'assess-v2.js',
+    'library-v2.js',
+    'account-v2.js',
+    'route-gate.js',
+    'release-v6.js',
+    'snap-v7.js',
+    'snap-nearby-v8.js',
+    'patch-v12.js',
+    'audit-core-v14.js',
+    'audit-product-v14.js',
+    'audit-account-v14.js'
+  ];
+  for(const file of files){
+    await new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src=`${file}?v=${version}`;
+      s.async=false;
+      s.onload=resolve;
+      s.onerror=()=>reject(new Error(`Could not load ${file}`));
+      document.head.appendChild(s);
+    });
+  }
+  window.__TRUWORTH_RELEASE_READY__=true;
+  window.dispatchEvent(new CustomEvent('truworth:release-ready'));
+})().catch((error)=>{
+  console.error('TruWorth failed to start',error);
+  document.body.innerHTML='<main style="font:16px system-ui;padding:40px;max-width:680px;margin:auto"><h1>TruWorth</h1><p>We could not start the app. Refresh the page and try again.</p></main>';
+});

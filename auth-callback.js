@@ -25,7 +25,9 @@
   }
 
   function renderError(message) {
-    root.innerHTML = `<div class="auth-icon error" aria-hidden="true">!</div><p class="auth-kicker">That link didn’t work</p><h1>We can fix this.</h1><p>${message}</p><div class="auth-actions"><a class="primary-button" href="account.html">Request a new link</a><a class="secondary-button" href="index.html">Go home</a></div>`;
+    root.innerHTML = '<div class="auth-icon error" aria-hidden="true">!</div><p class="auth-kicker">That link didn’t work</p><h1>We can fix this.</h1><p id="authErrorMessage"></p><div class="auth-actions"><a class="primary-button" href="account.html">Request a new link</a><a class="secondary-button" href="index.html">Go home</a></div>';
+    const messageNode = document.getElementById('authErrorMessage');
+    if (messageNode) messageNode.textContent = String(message || 'The email link may have expired or already been used.').slice(0, 500);
   }
 
   function renderReset() {
@@ -61,7 +63,7 @@
       const session = data?.session || null;
       if (initialError) {
         cleanUrl();
-        renderError(decodeURIComponent(initialError.replace(/\+/g, ' ')) || 'The email link may have expired or already been used.');
+        renderError(initialError.replace(/\+/g, ' '));
         return;
       }
       if (error) {

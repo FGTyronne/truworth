@@ -1,66 +1,8 @@
-import { createClient } from "npm:@supabase/supabase-js@2.117.2";
-
-const cors = {"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
-const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {status, headers:{...cors,"Content-Type":"application/json","Cache-Control":"no-store"}});
-const archetype = (motive: string | null | undefined) => motive === "need" ? "Practical" : motive === "joy" ? "Joy-led" : motive === "image" ? "Impulse-led" : "Exploring";
-
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  const auth = req.headers.get("Authorization");
-  if (!auth) return json({ error: "Authentication required" }, 401);
-  const url = Deno.env.get("SUPABASE_URL");
-  const anon = Deno.env.get("SUPABASE_ANON_KEY");
-  if (!url || !anon) return json({ error: "Service configuration unavailable" }, 500);
-  const supabase = createClient(url, anon, { global: { headers: { Authorization: auth } } });
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  const user = userData?.user;
-  if (userError || !user) return json({ error: "Invalid session" }, 401);
-
-  const [{ data: sub }, { data: assessments, error: assessmentsError }, { data: purchases }, { data: financial }] = await Promise.all([
-    supabase.from("subscriptions").select("tier,status").eq("user_id", user.id).maybeSingle(),
-    supabase.from("assessments").select("id,score,observed_price,status,inputs,created_at").eq("user_id", user.id).order("created_at", { ascending: true }),
-    supabase.from("purchase_tracking").select("assessment_id,actual_uses,actual_joy,purchased_at").eq("user_id", user.id),
-    supabase.from("financial_profiles").select("currency,income_amount,income_period,essential_outgoings_monthly,debt_commitments_monthly,savings_target_monthly").eq("user_id", user.id).maybeSingle(),
-  ]);
-  if (assessmentsError) return json({ error: "Could not load buyer history" }, 500);
-
-  const rows = assessments ?? [];
-  const boughtIds = new Set((purchases ?? []).map((p: any) => p.assessment_id));
-  const bought = rows.filter((r: any) => r.status === "purchased" || boughtIds.has(r.id));
-  const motiveCounts = (source: any[]) => source.reduce((acc: Record<string, number>, row: any) => { const m = row.inputs?.motive || "unknown"; acc[m] = (acc[m] || 0) + 1; return acc; }, {});
-  const dominant = (counts: Record<string, number>) => Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
-  const avg = (source: any[], key: string) => source.length ? source.reduce((sum, row) => sum + Number(row[key] || 0), 0) / source.length : 0;
-  const consideredMotive = dominant(motiveCounts(rows));
-  const boughtMotive = dominant(motiveCounts(bought));
-  const consideredAvg = Math.round(avg(rows, "score"));
-  const boughtAvg = Math.round(avg(bought, "score"));
-  const conversion = rows.length ? bought.length / rows.length : 0;
-  const teaserHeadline = rows.length < 3 ? "Your buyer profile is just getting started." : consideredMotive && boughtMotive && consideredMotive !== boughtMotive ? `Your Wants Self looks ${archetype(consideredMotive).toLowerCase()}, while your Real Buyer looks ${archetype(boughtMotive).toLowerCase()}.` : `Your Wants Self and Real Buyer are currently both ${archetype(consideredMotive).toLowerCase()}.`;
-  const isPlus = sub?.tier === "plus" && ["active", "trialing"].includes(sub?.status || "");
-  if (!isPlus) return json({ premium:false, teaser:{ headline:teaserHeadline, considerations:rows.length, purchases:bought.length } });
-
-  const observations: string[] = [];
-  if (rows.length < 3) observations.push("Add a few more considerations and purchases to make your buyer profile more precise.");
-  if (consideredMotive && boughtMotive && consideredMotive !== boughtMotive) observations.push(`You are most often tempted by ${archetype(consideredMotive).toLowerCase()} purchases, but the things you actually buy skew ${archetype(boughtMotive).toLowerCase()}.`);
-  if (rows.length >= 3 && conversion <= 0.3) observations.push("You are highly selective: most things you consider never become purchases.");
-  else if (rows.length >= 3 && conversion >= 0.7) observations.push("You convert a large share of considerations into purchases, so slowing the decision stage may have an outsized impact.");
-  if (bought.length >= 2 && boughtAvg >= consideredAvg + 5) observations.push("Your actual purchases score better than your typical consideration, suggesting you become more disciplined when money is really leaving your account.");
-  if (bought.length >= 2 && boughtAvg <= consideredAvg - 5) observations.push("The things you actually buy score below your average consideration; convenience, urgency or impulse may be overriding your original value test.");
-
-  let financialFit = null as null | Record<string, unknown>;
-  if (financial?.income_amount != null) {
-    const monthlyIncome = financial.income_period === "annual" ? Number(financial.income_amount) / 12 : Number(financial.income_amount);
-    const disposable = Math.max(0, monthlyIncome - Number(financial.essential_outgoings_monthly || 0) - Number(financial.debt_commitments_monthly || 0) - Number(financial.savings_target_monthly || 0));
-    const avgBoughtPrice = bought.length ? bought.reduce((s: number, r: any) => s + Number(r.observed_price || 0), 0) / bought.length : 0;
-    const pressure = disposable > 0 ? avgBoughtPrice / disposable : null;
-    financialFit = { monthlyIncome, disposable, avgBoughtPrice, pressure, currency: financial.currency || "GBP" };
-    if (pressure != null && bought.length) {
-      if (pressure < 0.25) observations.push("Your typical purchase is light relative to your monthly free cash, so affordability pressure is usually low.");
-      else if (pressure < 0.75) observations.push("Your typical purchase is noticeable but usually contained within one month of free cash.");
-      else observations.push("Your typical purchase absorbs a large share of monthly free cash, so timing and waiting periods matter more for you than the score alone.");
-    }
-  }
-
-  return json({premium:true, teaser:{headline:teaserHeadline}, profile:{wants:archetype(consideredMotive),real:archetype(boughtMotive),considerations:rows.length,purchases:bought.length,conversionRate:Math.round(conversion*100),consideredAverageScore:consideredAvg,purchasedAverageScore:boughtAvg,observations,financialFit}});
-});
+import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
+const allowedOrigins=new Set(['https://truworth.vercel.app','https://www.truworth.vercel.app','http://localhost:3000','http://127.0.0.1:3000']);
+const cors=(req:Request)=>{const origin=req.headers.get('origin')||'';return{'Access-Control-Allow-Origin':allowedOrigins.has(origin)?origin:'https://truworth.vercel.app','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin'}};
+const json=(req:Request,body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors(req),'Content-Type':'application/json','Cache-Control':'no-store'}});
+const currencyCode=(v:unknown)=>/^[A-Z]{3}$/i.test(String(v||''))?String(v).toUpperCase():null;
+const archetype=(m:string|null|undefined)=>m==='need'?'Practical':m==='joy'?'Joy-led':m==='image'?'Impulse-led':'Still forming';
+const lower=(m:string|null|undefined)=>archetype(m).toLowerCase();
+Deno.serve(async(req:Request)=>{if(req.method==='OPTIONS')return new Response('ok',{headers:cors(req)});if(req.method!=='POST')return json(req,{error:'Method not allowed'},405);const origin=req.headers.get('origin')||'';if(origin&&!allowedOrigins.has(origin))return json(req,{error:'Origin not allowed'},403);try{const auth=req.headers.get('Authorization')||'',token=auth.replace(/^Bearer\s+/i,'');if(!token)return json(req,{error:'Authentication required'},401);const keys=JSON.parse(Deno.env.get('SUPABASE_PUBLISHABLE_KEYS')||'{}'),publishable=keys?.default||Deno.env.get('SUPABASE_ANON_KEY')||'';const client=createClient(Deno.env.get('SUPABASE_URL')||'',publishable,{global:{headers:{Authorization:auth}},auth:{persistSession:false,autoRefreshToken:false}});const{data:userData,error:userError}=await client.auth.getUser(token),user=userData?.user;if(userError||!user)return json(req,{error:'Invalid session'},401);const[subRes,assessmentRes,purchaseRes,financialRes]=await Promise.all([client.from('subscriptions').select('tier,status').eq('user_id',user.id).maybeSingle(),client.from('assessments').select('id,score,observed_price,currency,status,inputs,created_at').eq('user_id',user.id).order('created_at',{ascending:true}),client.from('purchase_tracking').select('assessment_id,actual_uses,actual_joy,purchased_at').eq('user_id',user.id),client.from('financial_profiles').select('currency,income_amount,income_period,essential_outgoings_monthly,debt_commitments_monthly,savings_target_monthly').eq('user_id',user.id).maybeSingle()]);if(assessmentRes.error)throw assessmentRes.error;if(purchaseRes.error)throw purchaseRes.error;if(financialRes.error)throw financialRes.error;const rows=assessmentRes.data||[],boughtIds=new Set((purchaseRes.data||[]).map((p:any)=>p.assessment_id)),bought=rows.filter((r:any)=>r.status==='purchased'||boughtIds.has(r.id));const motiveCounts=(source:any[])=>source.reduce((acc:Record<string,number>,r:any)=>{const m=r.inputs?.motive||'unknown';acc[m]=(acc[m]||0)+1;return acc},{}),dominant=(c:Record<string,number>)=>Object.entries(c).sort((a,b)=>b[1]-a[1])[0]?.[0]||null,avg=(source:any[])=>source.length?source.reduce((s,r)=>s+Number(r.score||0),0)/source.length:0;const consideredMotive=dominant(motiveCounts(rows)),boughtMotive=dominant(motiveCounts(bought)),consideredAvg=Math.round(avg(rows)),boughtAvg=Math.round(avg(bought)),conversion=rows.length?bought.length/rows.length:0;const teaser=rows.length<3?'TruWorth is still learning your buying pattern.':bought.length&&consideredMotive&&boughtMotive&&consideredMotive!==boughtMotive?`What catches your eye leans ${lower(consideredMotive)}; what you actually buy leans ${lower(boughtMotive)}.`:bought.length?`What catches your eye and what you buy both lean ${lower(consideredMotive)}.`:`What catches your eye currently leans ${lower(consideredMotive)}. Add a purchase to compare that with what you really choose.`;const plus=subRes.data?.tier==='plus'&&['active','trialing'].includes(String(subRes.data?.status||''));if(!plus)return json(req,{premium:false,teaser:{headline:teaser,considerations:rows.length,purchases:bought.length}});const observations:string[]=[];if(rows.length<3)observations.push('A few more assessments will make these patterns more useful.');if(consideredMotive&&boughtMotive&&consideredMotive!==boughtMotive)observations.push(`You most often consider ${lower(consideredMotive)} purchases, but the purchases you record lean ${lower(boughtMotive)}.`);if(rows.length>=3&&conversion<=.3)observations.push('You consider plenty, but buy selectively.');else if(rows.length>=3&&conversion>=.7)observations.push('Most things you assess end up becoming purchases, so a pause may be useful when the value case is mixed.');if(bought.length>=2&&boughtAvg>=consideredAvg+5)observations.push('The things you actually buy tend to score better than the things you merely consider.');if(bought.length>=2&&boughtAvg<=consideredAvg-5)observations.push('Your recorded purchases tend to score below your wider consideration list.');const fin=financialRes.data;let financialFit:null|Record<string,unknown>=null;if(fin?.income_amount!=null){const currency=currencyCode(fin.currency)||'GBP',monthly=fin.income_period==='annual'?Number(fin.income_amount)/12:Number(fin.income_amount),disposable=Math.max(0,monthly-Number(fin.essential_outgoings_monthly||0)-Number(fin.debt_commitments_monthly||0)-Number(fin.savings_target_monthly||0));const sameCurrency=bought.filter((r:any)=>(currencyCode(r.currency||r.inputs?.currency)||'GBP')===currency);if(sameCurrency.length){const avgPrice=sameCurrency.reduce((s:number,r:any)=>s+Number(r.observed_price||0),0)/sameCurrency.length,pressure=disposable>0?avgPrice/disposable:null;financialFit={disposable,avgBoughtPrice:avgPrice,pressure,currency,sampleSize:sameCurrency.length};if(pressure!=null){if(pressure<.25)observations.push('Your recorded purchases in this currency are usually light relative to your monthly free cash.');else if(pressure<.75)observations.push('Your typical recorded purchase in this currency is noticeable but usually stays within one month of free cash.');else observations.push('Your typical recorded purchase in this currency takes a large share of monthly free cash.')}}else if(bought.length)observations.push(`Your purchases are recorded in other currencies, so TruWorth is not combining them with your ${currency} financial profile.`)}return json(req,{premium:true,teaser:{headline:teaser},profile:{wants:archetype(consideredMotive),real:bought.length?archetype(boughtMotive):'Still learning',considerations:rows.length,purchases:bought.length,conversionRate:Math.round(conversion*100),consideredAverageScore:consideredAvg,purchasedAverageScore:boughtAvg,observations,financialFit}})}catch(error){console.error(error);return json(req,{error:'Could not load your buyer profile.'},500)}});

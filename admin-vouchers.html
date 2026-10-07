@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="TruWorth voucher administration.">
+  <title>Voucher control | TruWorth</title>
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="voucher-admin.css?v=20261007a">
+</head>
+<body class="voucher-admin-page">
+  <main class="voucher-admin-shell">
+    <header class="voucher-admin-header">
+      <a class="voucher-admin-brand" href="account.html" aria-label="Back to TruWorth">Tru<span>Worth</span><b>.</b></a>
+      <a class="voucher-admin-back" href="account.html">Back to account</a>
+    </header>
+    <section id="voucherAdminApp" aria-live="polite">
+      <div class="voucher-admin-loading">Checking access…</div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
+  <script defer src="admin-vouchers.js?v=20261007a"></script>
+</body>
+</html>

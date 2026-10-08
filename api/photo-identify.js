@@ -1,3 +1,5 @@
+import { getVercelOidcToken } from '@vercel/oidc';
+
 const MODEL = 'google/gemini-3-flash';
 const MAX_IMAGE_CHARS = 4_000_000;
 const ALLOWED_ORIGINS = new Set([
@@ -110,6 +112,21 @@ function parseJsonContent(content) {
   return JSON.parse(text);
 }
 
+async function getGatewayToken() {
+  if (process.env.AI_GATEWAY_API_KEY) return process.env.AI_GATEWAY_API_KEY;
+  if (process.env.VERCEL_OIDC_TOKEN) return process.env.VERCEL_OIDC_TOKEN;
+  try {
+    return await getVercelOidcToken({
+      project: 'prj_zoXOpfD3YBfrBdLFrKnJCIIoyH2A',
+      team: 'team_FY7chI81P7NXnvUqmUsFoN9P',
+      expirationBufferMs: 60_000,
+    });
+  } catch (error) {
+    console.error('Unable to obtain Vercel OIDC token', error instanceof Error ? error.message : String(error));
+    return '';
+  }
+}
+
 export default async function handler(req, res) {
   setHeaders(res);
 
@@ -133,9 +150,9 @@ export default async function handler(req, res) {
     return res.status(413).json({ error: 'The analysis image is too large.' });
   }
 
-  const token = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
+  const token = await getGatewayToken();
   if (!token) {
-    return res.status(503).json({ error: 'AI vision is not configured for this deployment.' });
+    return res.status(503).json({ error: 'AI vision authentication is unavailable for this deployment.' });
   }
 
   const instruction = [

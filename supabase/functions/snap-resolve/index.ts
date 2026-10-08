@@ -25,13 +25,22 @@ function relevant(item:any,q:{tokens:string[],known:string,modelLike:string}){
 }
 async function fetchJson(url:string){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6500);try{const r=await fetch(url,{headers:{Accept:'application/json','User-Agent':'TruWorth/1.0 product-resolution'},signal:controller.signal,redirect:'follow'});if(!r.ok)throw new Error(`provider ${r.status}`);return await r.json()}finally{clearTimeout(timer)}}
 function candidate(item:any,source:'barcode'|'ocr'){const offers=Array.isArray(item?.offers)?item.offers:[],offer=offers.find((o:any)=>o?.link&&o?.price!=null)||offers.find((o:any)=>o?.link)||offers[0]||{},currency=/^[A-Z]{3}$/i.test(String(offer?.currency||''))?String(offer.currency).toUpperCase():null,n=Number(offer?.price);return{title:clean(item?.title||item?.description||'',220),brand:clean(item?.brand||'',100),category:clean(item?.category||'',140),image_url:Array.isArray(item?.images)&&/^https?:\/\//i.test(String(item.images[0]||''))?clean(item.images[0],700):null,source_url:/^https?:\/\//i.test(String(offer?.link||''))?clean(offer.link,700):null,source_label:source==='barcode'?'Barcode database match':'Structured catalogue text match',price:currency&&Number.isFinite(n)&&n>0?n:null,currency,retailer:clean(offer?.merchant||offer?.domain||'',120)||null,barcode:clean(item?.ean||item?.upc||'',40)||null,confidence:source==='barcode'?98:62}}
-function openFactsCandidate(p:any,label:string){return{title:clean(p?.product_name||p?.generic_name||'',220),brand:clean(p?.brands||'',100),category:clean(p?.categories||'',140),image_url:/^https?:\/\//i.test(String(p?.image_front_url||''))?clean(p.image_front_url,700):null,source_url:p?.code?`https://world.openfoodfacts.org/product/${encodeURIComponent(String(p.code))}`:null,source_label:label,price:null,currency:null,retailer:null,barcode:clean(p?.code||'',40)||null,confidence:92}}
-async function openProductCandidate(barcode:string){try{const data=await fetchJson(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?product_type=all&fields=code,product_name,generic_name,brands,image_front_url,categories`),p=data?.product;if(!p?.product_name)return null;return openFactsCandidate(p,'Open product database barcode match')}catch{return null}}
+function openFactsCandidate(p:any,label:string,base:string){return{title:clean(p?.product_name||p?.generic_name||'',220),brand:clean(p?.brands||'',100),category:clean(p?.categories||'',140),image_url:/^https?:\/\//i.test(String(p?.image_front_url||''))?clean(p.image_front_url,700):null,source_url:p?.code?`${base}/product/${encodeURIComponent(String(p.code))}`:null,source_label:label,price:null,currency:null,retailer:null,barcode:clean(p?.code||'',40)||null,confidence:96}}
+async function openBarcodeCandidate(base:string,barcode:string,label:string){try{const data=await fetchJson(`${base}/api/v2/product/${encodeURIComponent(barcode)}.json?fields=code,product_name,generic_name,brands,image_front_url,categories`),p=data?.product;if(!p?.product_name)return null;return openFactsCandidate(p,label,base)}catch{return null}}
+async function openProductCandidate(barcode:string){
+  const sources=[
+    ['https://world.openbeautyfacts.org','Open Beauty Facts barcode match'],
+    ['https://world.openproductsfacts.org','Open Products Facts barcode match'],
+    ['https://world.openfoodfacts.org','Open Food Facts barcode match']
+  ] as const;
+  for(const [base,label] of sources){const hit=await openBarcodeCandidate(base,barcode,label);if(hit)return hit}
+  return null;
+}
 async function openFactsTextSearch(base:string,query:string,q:{tokens:string[],known:string,modelLike:string},label:string){
   try{
     const url=`${base}/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=6&fields=code,product_name,generic_name,brands,image_front_url,categories`;
     const data=await fetchJson(url);
-    return (data?.products||[]).filter((p:any)=>p?.product_name&&relevant(p,q)).map((p:any)=>openFactsCandidate(p,label)).slice(0,4);
+    return (data?.products||[]).filter((p:any)=>p?.product_name&&relevant(p,q)).map((p:any)=>openFactsCandidate(p,label,base)).slice(0,4);
   }catch(e){console.warn(`${label} search failed`,e);return[]}
 }
 Deno.serve(async(req:Request)=>{
@@ -43,8 +52,8 @@ Deno.serve(async(req:Request)=>{
     if(!barcode&&!raw)return json(req,{error:'Barcode or product text required'},400);
     let candidates:any[]=[],resolution=barcode?'barcode':'ocr',low=false,suggested='';
     if(barcode&&/^\d{8,14}$/.test(barcode)){
-      try{const data=await fetchJson(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(barcode)}`);candidates=(data?.items||[]).map((x:any)=>candidate(x,'barcode')).filter((x:any)=>x.title).slice(0,4)}catch(e){console.warn('UPC lookup failed',e)}
-      if(!candidates.length){const f=await openProductCandidate(barcode);if(f)candidates=[f]}
+      const openHit=await openProductCandidate(barcode);if(openHit)candidates=[openHit];
+      if(!candidates.length){try{const data=await fetchJson(`https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(barcode)}`);candidates=(data?.items||[]).map((x:any)=>candidate(x,'barcode')).filter((x:any)=>x.title).slice(0,4)}catch(e){console.warn('UPC lookup failed',e)}}
     }
     if(!candidates.length&&raw){
       const q=quality(raw);suggested=q.query;

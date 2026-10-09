@@ -17,7 +17,7 @@ jobs:
         run: npm install --no-save playwright-core@1.56.1
       - name: Run production UI checks
         run: |
-          cat > /tmp/ui-qa.mjs <<'EOF'
+          cat > ui-qa.mjs <<'EOF'
           import { chromium } from 'playwright-core';
           import fs from 'fs';
           const candidates=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium-browser','/usr/bin/chromium'];
@@ -47,8 +47,7 @@ jobs:
               const metrics=await page.evaluate(()=>({
                 innerWidth:window.innerWidth,
                 scrollWidth:document.documentElement.scrollWidth,
-                hasBottomNav:!!document.querySelector('.bottom-nav'),
-                bodyText:(document.body.innerText||'').slice(0,6000)
+                hasBottomNav:!!document.querySelector('.bottom-nav')
               }));
               if(metrics.scrollWidth>metrics.innerWidth+3) failures.push(`${name}@${width}: horizontal overflow ${metrics.scrollWidth}>${metrics.innerWidth}`);
               if(width<=430 && !metrics.hasBottomNav) failures.push(`${name}@${width}: bottom nav missing`);
@@ -68,4 +67,4 @@ jobs:
           if(failures.length){console.error('FAILURES\n'+failures.join('\n'));process.exit(1)}
           console.log('UI_QA_PASS');
           EOF
-          node /tmp/ui-qa.mjs
+          node ui-qa.mjs

@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "TruWorth",
+    "slug": "truworth",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "truworth",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ramellacorporateconsulting.truworth"
+    },
+    "android": {
+      "package": "com.ramellacorporateconsulting.truworth",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": ["expo-secure-store"]
+  }
+}

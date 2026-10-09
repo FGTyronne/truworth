@@ -4,9 +4,6 @@ verify_jwt = true
 [functions.buyer-insights]
 verify_jwt = true
 
-[functions.snap-resolve]
-verify_jwt = false
-
 [functions.purchase-vote]
 verify_jwt = true
 

@@ -9,63 +9,6 @@ const ALLOWED_ORIGINS = new Set([
   'http://127.0.0.1:3000',
 ]);
 
-const schema = {
-  name: 'truworth_product_identity',
-  strict: true,
-  schema: {
-    type: 'object',
-    additionalProperties: false,
-    required: [
-      'product_name', 'brand', 'model', 'variant', 'category', 'confidence',
-      'exactness', 'search_query', 'visible_text', 'evidence', 'alternatives'
-    ],
-    properties: {
-      product_name: { type: 'string', maxLength: 180 },
-      brand: { type: 'string', maxLength: 100 },
-      model: { type: 'string', maxLength: 120 },
-      variant: { type: 'string', maxLength: 120 },
-      category: { type: 'string', maxLength: 120 },
-      confidence: { type: 'integer', minimum: 0, maximum: 100 },
-      exactness: { type: 'string', enum: ['exact', 'probable', 'category_only', 'uncertain'] },
-      search_query: { type: 'string', maxLength: 220 },
-      visible_text: {
-        type: 'array',
-        maxItems: 8,
-        items: { type: 'string', maxLength: 120 }
-      },
-      evidence: {
-        type: 'array',
-        maxItems: 6,
-        items: { type: 'string', maxLength: 180 }
-      },
-      alternatives: {
-        type: 'array',
-        maxItems: 3,
-        items: {
-          type: 'object',
-          additionalProperties: false,
-          required: ['product_name', 'brand', 'model', 'variant', 'category', 'confidence', 'exactness', 'search_query', 'evidence'],
-          properties: {
-            product_name: { type: 'string', maxLength: 180 },
-            brand: { type: 'string', maxLength: 100 },
-            model: { type: 'string', maxLength: 120 },
-            variant: { type: 'string', maxLength: 120 },
-            category: { type: 'string', maxLength: 120 },
-            confidence: { type: 'integer', minimum: 0, maximum: 100 },
-            exactness: { type: 'string', enum: ['exact', 'probable', 'category_only', 'uncertain'] },
-            search_query: { type: 'string', maxLength: 220 },
-            evidence: {
-              type: 'array',
-              maxItems: 4,
-              items: { type: 'string', maxLength: 180 }
-            }
-          }
-        }
-      }
-    }
-  }
-};
-
 function setHeaders(res) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store, max-age=0');
@@ -109,22 +52,33 @@ function normaliseIdentity(raw = {}) {
 function parseJsonContent(content) {
   if (content && typeof content === 'object' && !Array.isArray(content)) return content;
   const text = String(content || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    const first = text.indexOf('{');
+    const last = text.lastIndexOf('}');
+    if (first >= 0 && last > first) return JSON.parse(text.slice(first, last + 1));
+    throw new Error('Model did not return JSON.');
+  }
 }
 
 async function getGatewayToken() {
   if (process.env.AI_GATEWAY_API_KEY) return process.env.AI_GATEWAY_API_KEY;
   if (process.env.VERCEL_OIDC_TOKEN) return process.env.VERCEL_OIDC_TOKEN;
   try {
-    return await getVercelOidcToken({
-      project: 'prj_zoXOpfD3YBfrBdLFrKnJCIIoyH2A',
-      team: 'team_FY7chI81P7NXnvUqmUsFoN9P',
-      expirationBufferMs: 60_000,
-    });
+    return await getVercelOidcToken();
   } catch (error) {
     console.error('Unable to obtain Vercel OIDC token', error instanceof Error ? error.message : String(error));
     return '';
   }
+}
+
+function gatewayFailure(status) {
+  if (status === 401 || status === 403) return { error: 'AI vision gateway authentication failed.', code: `gateway_${status}` };
+  if (status === 402) return { error: 'AI Gateway credits are unavailable for this account.', code: 'gateway_402' };
+  if (status === 429) return { error: 'AI vision is temporarily rate limited. Try again shortly.', code: 'gateway_429' };
+  if (status >= 500) return { error: 'The AI provider is temporarily unavailable.', code: `gateway_${status}` };
+  return { error: 'The AI vision request was rejected by the model gateway.', code: `gateway_${status}` };
 }
 
 export default async function handler(req, res) {
@@ -152,22 +106,22 @@ export default async function handler(req, res) {
 
   const token = await getGatewayToken();
   if (!token) {
-    return res.status(503).json({ error: 'AI vision authentication is unavailable for this deployment.' });
+    return res.status(503).json({ error: 'AI vision authentication is unavailable for this deployment.', code: 'no_gateway_token' });
   }
 
   const instruction = [
     'You are the product-identification engine for TruWorth, a purchase decision app.',
-    'Analyse the supplied retail product photo and identify the product as precisely as the image evidence allows.',
+    'Analyse the supplied retail product photo and identify it as precisely as the image evidence allows.',
     'Use visible logos, packaging, typography, industrial design, colours, model markings and readable text.',
     'Never invent an exact model, generation, size, storage capacity, colourway or variant when the photo does not support it.',
-    'If only the category is defensible, set exactness to category_only and keep unknown brand/model/variant fields empty.',
-    'If a brand is visible but the model is uncertain, identify the brand and product family and mark probable or uncertain.',
-    'product_name should be the cleanest useful name a shopper could search for, without marketing filler.',
-    'search_query should combine the strongest identifying terms for a product catalogue lookup.',
-    'visible_text must contain only text you can actually read in the image; do not paraphrase it.',
-    'evidence should briefly explain the visual clues supporting the identification.',
+    'If only the category is defensible, set exactness to category_only and leave unknown brand/model/variant fields empty.',
+    'If a brand is visible but model is uncertain, identify the brand and product family and use probable or uncertain.',
+    'Return ONLY one valid JSON object with these keys:',
+    '{"product_name":"","brand":"","model":"","variant":"","category":"","confidence":0,"exactness":"exact|probable|category_only|uncertain","search_query":"","visible_text":[],"evidence":[],"alternatives":[]}.',
+    'Each alternative must use product_name, brand, model, variant, category, confidence, exactness, search_query and evidence.',
+    'visible_text must contain only text actually readable in the image. evidence must briefly state the visual clues.',
     'Return alternatives only when there are genuinely plausible competing identities.',
-    barcode ? `A locally detected barcode value is ${barcode}. Treat it as supporting evidence but do not assume it is valid if the image conflicts.` : 'No reliable barcode was detected locally.',
+    barcode ? `A locally detected barcode is ${barcode}. Treat it as supporting evidence only if consistent with the image.` : 'No reliable barcode was detected locally.',
   ].join(' ');
 
   try {
@@ -179,12 +133,8 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: MODEL,
-        temperature: 0.1,
+        temperature: 0,
         max_tokens: 1200,
-        response_format: {
-          type: 'json_schema',
-          json_schema: schema,
-        },
         messages: [
           {
             role: 'user',
@@ -199,8 +149,8 @@ export default async function handler(req, res) {
 
     if (!gatewayResponse.ok) {
       const gatewayText = await gatewayResponse.text();
-      console.error('AI Gateway photo-identify failed', gatewayResponse.status, gatewayText.slice(0, 500));
-      return res.status(502).json({ error: 'AI vision could not identify the product right now.' });
+      console.error('AI Gateway photo-identify failed', gatewayResponse.status, gatewayText.slice(0, 700));
+      return res.status(502).json(gatewayFailure(gatewayResponse.status));
     }
 
     const payload = await gatewayResponse.json();
@@ -208,7 +158,7 @@ export default async function handler(req, res) {
     const identity = normaliseIdentity(parseJsonContent(content));
 
     if (!identity.product_name && !identity.category) {
-      return res.status(422).json({ error: 'The image did not contain enough product detail to identify.' });
+      return res.status(422).json({ error: 'The image did not contain enough product detail to identify.', code: 'insufficient_visual_detail' });
     }
 
     return res.status(200).json({
@@ -218,6 +168,6 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('photo-identify exception', error instanceof Error ? error.message : String(error));
-    return res.status(500).json({ error: 'AI vision could not finish the analysis.' });
+    return res.status(500).json({ error: 'AI vision could not finish the analysis.', code: 'vision_exception' });
   }
 }

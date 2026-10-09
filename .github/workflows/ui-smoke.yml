@@ -1,0 +1,33 @@
+name: TruWorth UI Smoke
+on:
+  push:
+    paths:
+      - '.github/workflows/ui-smoke.yml'
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright-core@1.56.1
+      - name: Check live home
+        run: |
+          cat > smoke.mjs <<'EOF'
+          import { chromium } from 'playwright-core'; import fs from 'fs';
+          const p=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(fs.existsSync);
+          const b=await chromium.launch({headless:true,executablePath:p,args:['--no-sandbox']}); const c=await b.newContext({viewport:{width:390,height:900}}); const page=await c.newPage();
+          const errs=[]; page.on('pageerror',e=>errs.push(e.message)); page.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
+          const r=await page.goto('https://truworth.vercel.app/',{waitUntil:'domcontentloaded',timeout:30000}); console.log('HTTP',r?.status());
+          await page.waitForTimeout(3500);
+          console.log('BODYCLASS',await page.locator('body').getAttribute('class'));
+          console.log('HAS_HERO',await page.locator('.tw-home-hero').count());
+          console.log('TEXT',(await page.locator('body').innerText()).slice(0,1200));
+          console.log('ERRORS',JSON.stringify(errs));
+          console.log('METRICS',await page.evaluate(()=>JSON.stringify({w:innerWidth,sw:document.documentElement.scrollWidth,nav:getComputedStyle(document.querySelector('.bottom-nav')).display})));
+          await b.close();
+          if(!await Promise.resolve(true)) process.exit(1);
+          EOF
+          node smoke.mjs

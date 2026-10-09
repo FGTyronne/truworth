@@ -11,7 +11,7 @@
     setText(document.querySelector('.tw-eyebrow'), 'Check before you spend');
     setText(
       document.querySelector('.tw-home-copy > p'),
-      'Use TruWorth for anything from headphones and holidays to subscriptions and home upgrades. Add the details, get a score, and see whether the purchase makes sense for you.'
+      'Check products like headphones, phones, trainers, bags, skincare and home tech. Add the details, get a score, and see whether the purchase makes sense for you.'
     );
 
     const trust = document.querySelector('.tw-home-trust');

@@ -1,0 +1,75 @@
+:root{--tw-v18-border:#e7eaf1;--tw-v18-soft:#f6f8fb}
+
+/* Assessment money fields: legacy themes positioned the currency symbol over the input on narrow screens. */
+.tw17 .money-input{display:grid!important;grid-template-columns:44px minmax(0,1fr)!important;align-items:stretch!important;position:relative!important;overflow:hidden!important;border:1px solid var(--tw-line)!important;border-radius:14px!important;background:#fbfcfd!important;min-height:50px!important}
+.tw17 .money-input>span:first-child{position:static!important;inset:auto!important;transform:none!important;display:grid!important;place-items:center!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;background:#f1f4f7!important;border-right:1px solid var(--tw-line)!important;color:var(--tw-ink)!important;font-weight:850!important;line-height:1!important;z-index:1!important}
+.tw17 .money-input input,.tw17 .money-input .input{position:static!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:48px!important;margin:0!important;padding:0 14px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;outline-offset:-2px!important}
+.tw17 .money-input:focus-within{border-color:var(--tw-green)!important;box-shadow:0 0 0 3px rgba(21,195,154,.12)!important}
+
+/* Home proof points: equal visual weight instead of three uneven inline fragments. */
+.tw17 .tw-home-trust{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;width:min(100%,600px)!important;margin-top:18px!important}
+.tw17 .tw-home-trust span{white-space:normal!important;min-width:0!important;min-height:48px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;text-align:center!important;padding:9px 8px!important;border:1px solid rgba(231,234,241,.9)!important;border-radius:14px!important;background:rgba(255,255,255,.78)!important;line-height:1.2!important}
+.tw17 .tw-home-trust b{display:grid;width:19px;height:19px;flex:0 0 19px;place-items:center;border-radius:50%;background:var(--tw-green-soft);color:var(--tw-green-dark);font-size:11px}
+
+/* Footer links must always sit above the fixed mobile nav hit area and remain tappable. */
+.tw17 .site-footer{position:relative!important;z-index:4!important;display:flex!important;flex-wrap:wrap!important;align-items:center!important;justify-content:center!important;gap:8px 18px!important;padding:28px 0 22px!important}
+.tw17 .site-footer a{position:relative!important;z-index:5!important;pointer-events:auto!important;display:inline-flex!important;align-items:center!important;min-height:36px!important;padding:6px 2px!important;color:var(--tw-text)!important;font-weight:700!important}
+.tw17 .site-footer a:hover{color:var(--tw-green-dark)!important}
+
+/* Account: make the page useful rather than a stretched email card. */
+.tw17.tw-page-account .main-content{max-width:980px;margin:0 auto}
+.tw17 .account-overview{display:grid!important;grid-template-columns:1fr!important;gap:14px!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+.tw17 .account-profile{display:grid!important;grid-template-columns:58px minmax(0,1fr) auto!important;align-items:center!important;gap:14px!important;padding:20px!important;border:1px solid var(--tw-line)!important;border-radius:22px!important;background:#fff!important;box-shadow:var(--tw-shadow-soft)!important;min-width:0!important}
+.tw17 .account-profile .avatar{width:58px!important;height:58px!important;border-radius:18px!important;display:grid!important;place-items:center!important;background:linear-gradient(135deg,var(--tw-blue-soft),var(--tw-lilac-soft))!important;color:var(--tw-ink)!important;font-size:22px!important;font-weight:900!important}
+.tw17 .account-profile>div:nth-child(2){min-width:0!important}
+.tw17 .account-profile span{display:block;color:var(--tw-muted);font-size:12px;font-weight:750;margin-bottom:4px}
+.tw17 .account-profile strong{display:block;max-width:100%;min-width:0;overflow-wrap:anywhere;word-break:break-word;font-size:18px;line-height:1.25;color:var(--tw-ink)}
+.tw17 .tw-account-plan-badge{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:34px!important;padding:7px 11px!important;border-radius:999px!important;background:var(--tw-green-soft)!important;color:#08775d!important;font-size:12px!important;font-weight:900!important;white-space:nowrap!important}
+.tw17 .account-stats{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
+.tw17 .account-stats>div{min-width:0!important;padding:17px!important;border:1px solid var(--tw-line)!important;border-radius:18px!important;background:#fff!important;box-shadow:var(--tw-shadow-soft)!important}
+.tw17 .account-stats span{display:block!important;color:var(--tw-muted)!important;font-size:11px!important;text-transform:uppercase!important;letter-spacing:.06em!important;font-weight:850!important;margin-bottom:5px!important}
+.tw17 .account-stats strong{display:block!important;font-size:20px!important;line-height:1.15!important;color:var(--tw-ink)!important;overflow-wrap:anywhere!important}
+.tw17 .tw-account-plan{padding:21px;border:1px solid var(--tw-line);border-radius:22px;background:linear-gradient(135deg,#fff 0%,#effcf8 100%);box-shadow:var(--tw-shadow-soft)}
+.tw17 .tw-account-plan-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
+.tw17 .tw-account-plan-head span{display:block;color:var(--tw-green-dark);font-size:12px;text-transform:uppercase;letter-spacing:.07em;font-weight:900;margin-bottom:5px}
+.tw17 .tw-account-plan-head h2{margin:0;font-size:22px;line-height:1.1;letter-spacing:-.5px;color:var(--tw-ink)}
+.tw17 .tw-account-plan-head p{margin:7px 0 0;color:var(--tw-text);font-size:14px;line-height:1.45;max-width:58ch}
+.tw17 .tw-account-meter{height:9px;border-radius:999px;background:#e8edf1;overflow:hidden;margin:12px 0 7px}
+.tw17 .tw-account-meter span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--tw-green),var(--tw-green-dark))}
+.tw17 .tw-account-meter-copy{display:flex;justify-content:space-between;gap:12px;color:var(--tw-muted);font-size:12px;font-weight:700}
+.tw17 .tw-account-features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:17px}
+.tw17 .tw-account-features div{display:flex;align-items:flex-start;gap:8px;padding:10px 11px;border-radius:14px;background:rgba(255,255,255,.82);color:var(--tw-text);font-size:13px;line-height:1.35}
+.tw17 .tw-account-features b{color:var(--tw-green-dark)}
+.tw17 .tw-account-upgrade{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:17px;padding-top:16px;border-top:1px solid var(--tw-line)}
+.tw17 .tw-account-upgrade div{min-width:0}.tw17 .tw-account-upgrade strong{display:block;font-size:14px;color:var(--tw-ink);margin-bottom:3px}.tw17 .tw-account-upgrade small{display:block;color:var(--tw-text);line-height:1.35}
+.tw17 .tw-account-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tw17 .tw-account-shortcuts a{display:flex;flex-direction:column;gap:4px;min-height:86px;padding:15px;border:1px solid var(--tw-line);border-radius:18px;background:#fff;color:var(--tw-ink);box-shadow:var(--tw-shadow-soft)}
+.tw17 .tw-account-shortcuts a span{font-size:20px}.tw17 .tw-account-shortcuts a strong{font-size:13px}.tw17 .tw-account-shortcuts a small{color:var(--tw-muted);font-size:11px;line-height:1.3}
+.tw17 .tw-subscription-note{margin:0!important;padding:13px 15px!important;border-radius:15px!important;background:#f7f8fa!important;color:var(--tw-text)!important;font-size:13px!important;line-height:1.4!important}
+.tw17 .account-actions{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:9px!important;padding:3px 0 0!important}
+
+@media(max-width:700px){
+  .tw17 .tw-home-trust{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;width:100%!important}
+  .tw17 .tw-home-trust span{padding:8px 5px!important;font-size:11px!important;flex-direction:column!important;gap:4px!important;min-height:62px!important}
+  .tw17 .account-profile{grid-template-columns:50px minmax(0,1fr)!important;padding:16px!important}
+  .tw17 .account-profile .avatar{width:50px!important;height:50px!important;border-radius:16px!important;font-size:19px!important}
+  .tw17 .account-profile strong{font-size:15px!important}
+  .tw17 .tw-account-plan-badge{grid-column:1/-1!important;justify-self:start!important;margin-left:64px!important;margin-top:-5px!important}
+  .tw17 .account-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important}
+  .tw17 .account-stats>div{padding:13px 10px!important;text-align:center!important}
+  .tw17 .account-stats strong{font-size:17px!important}
+  .tw17 .tw-account-plan{padding:17px!important}
+  .tw17 .tw-account-plan-head{display:block!important}.tw17 .tw-account-plan-head .primary-button{margin-top:13px!important;width:100%!important}
+  .tw17 .tw-account-features{grid-template-columns:1fr!important}
+  .tw17 .tw-account-upgrade{display:block!important}.tw17 .tw-account-upgrade .primary-button{width:100%!important;margin-top:12px!important}
+  .tw17 .tw-account-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .tw17 .account-actions .secondary-button,.tw17 .account-actions .text-button{flex:1 1 auto!important}
+  .tw17 .site-footer{padding-bottom:94px!important}
+}
+
+@media(max-width:360px){
+  .tw17 .tw-home-trust span{font-size:10px!important}
+  .tw17 .account-stats{grid-template-columns:1fr!important}
+  .tw17 .account-stats>div{text-align:left!important}
+  .tw17 .tw-account-plan-badge{margin-left:0!important;grid-column:1/-1!important}
+}

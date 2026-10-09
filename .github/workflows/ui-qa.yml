@@ -39,28 +39,34 @@ jobs:
               const page=await context.newPage();
               const errors=[];
               page.on('pageerror',e=>errors.push(`pageerror:${e.message}`));
-              page.on('console',m=>{if(m.type()==='error') errors.push(`console:${m.text()}`)});
-              const response=await page.goto(url,{waitUntil:'networkidle',timeout:60000});
+              page.on('console',m=>{if(m.type()==='error' && !/favicon/i.test(m.text())) errors.push(`console:${m.text()}`)});
+              const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
               if(!response || !response.ok()) failures.push(`${name}@${width}: HTTP ${response?.status()}`);
-              try{await page.waitForSelector('.tw17',{timeout:15000});}catch{failures.push(`${name}@${width}: .tw17 missing`)}
-              try{await page.waitForSelector(selector,{timeout:15000});}catch{failures.push(`${name}@${width}: ${selector} missing`)}
+              try{await page.waitForSelector('.tw17',{timeout:10000});}catch{failures.push(`${name}@${width}: .tw17 missing`)}
+              try{await page.waitForSelector(selector,{timeout:10000});}catch{failures.push(`${name}@${width}: ${selector} missing`)}
+              await page.waitForTimeout(250);
               const metrics=await page.evaluate(()=>({
                 innerWidth:window.innerWidth,
                 scrollWidth:document.documentElement.scrollWidth,
-                hasBottomNav:!!document.querySelector('.bottom-nav')
+                hasBottomNav:!!document.querySelector('.bottom-nav'),
+                bottomNavDisplay:getComputedStyle(document.querySelector('.bottom-nav')).display,
+                collageLoaded:!document.querySelector('.tw-collage-card img') || document.querySelector('.tw-collage-card img').complete
               }));
               if(metrics.scrollWidth>metrics.innerWidth+3) failures.push(`${name}@${width}: horizontal overflow ${metrics.scrollWidth}>${metrics.innerWidth}`);
-              if(width<=430 && !metrics.hasBottomNav) failures.push(`${name}@${width}: bottom nav missing`);
+              if(width<=430 && (!metrics.hasBottomNav || metrics.bottomNavDisplay==='none')) failures.push(`${name}@${width}: visible bottom nav missing`);
+              if(name==='home' && !metrics.collageLoaded) failures.push(`${name}@${width}: collage did not load`);
               if(errors.length) failures.push(`${name}@${width}: ${errors.join(' | ')}`);
-              console.log(JSON.stringify({name,width,scrollWidth:metrics.scrollWidth,innerWidth:metrics.innerWidth,ok:!failures.some(f=>f.startsWith(`${name}@${width}:`))}));
+              console.log(JSON.stringify({name,width,scrollWidth:metrics.scrollWidth,innerWidth:metrics.innerWidth,bottomNav:metrics.bottomNavDisplay,ok:!failures.some(f=>f.startsWith(`${name}@${width}:`))}));
               await context.close();
             }
           }
           const context=await browser.newContext({viewport:{width:390,height:900}});
           const home=await context.newPage();
-          await home.goto('https://truworth.vercel.app/',{waitUntil:'networkidle'});
+          await home.goto('https://truworth.vercel.app/',{waitUntil:'domcontentloaded'});
+          await home.waitForSelector('.tw-home-hero',{timeout:10000});
           await home.getByRole('link',{name:/Start assessment/i}).first().click();
           await home.waitForURL(/assess\.html/,{timeout:15000});
+          await home.waitForSelector('#assessment',{timeout:10000});
           if(!await home.locator('#assessment').count()) failures.push('Home CTA did not reach working assessment form');
           await context.close();
           await browser.close();

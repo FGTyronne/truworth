@@ -99,7 +99,7 @@ function HomeScreen({ session, assessments, purchases, onAssess, onResult }: { s
       <Text style={styles.heroTitle}>Before you buy,{`\n`}<Text style={styles.heroAccent}>check if it’s worth it.</Text></Text>
       <Text style={styles.heroCopy}>Check products like headphones, phones, trainers, bags, skincare and home tech. TruWorth gives you a clear score based on the details you enter.</Text>
       <PrimaryButton label="Start assessment →" onPress={onAssess} />
-      <View style={styles.proofRow}><Text style={styles.proof}>✓ About 2 minutes</Text><Text style={styles.proof}>✓ Clear 0–100 score</Text></View>
+      <View style={styles.proofRow}><Text style={styles.proof}>✓ No account needed</Text><Text style={styles.proof}>✓ About 2 minutes</Text><Text style={styles.proof}>✓ Clear 0–100 score</Text></View>
       <Image source={{ uri: HERO }} resizeMode="cover" style={{ width: '100%', aspectRatio: 1.18, borderRadius: 20, backgroundColor: '#F7F7F4', marginTop: 2 }} accessibilityLabel="Examples of everyday products" />
     </View>
 
@@ -109,7 +109,7 @@ function HomeScreen({ session, assessments, purchases, onAssess, onResult }: { s
       <View style={styles.statCard}><Text style={styles.statNumber}>{assessments.length ? average : '—'}</Text><Text style={styles.statLabel}>Avg score</Text></View>
     </View>
 
-    <SectionTitle eyebrow="Popular categories" title="What are you considering?" copy="The MVP is focused on physical consumer products." />
+    <SectionTitle eyebrow="Popular categories" title="What are you considering?" copy="Tech, fashion, home, beauty, fitness and gaming products." />
     <View style={styles.categoryGrid}>{categories.map(([icon, label], index) => <Pressable key={label} onPress={onAssess} style={[styles.category, [styles.catMint, styles.catBlue, styles.catPeach, styles.catLilac, styles.catYellow, styles.catMint][index]]}><Text style={styles.categoryIcon}>{icon}</Text><Text style={styles.categoryText}>{label}</Text></Pressable>)}</View>
 
     <SectionTitle eyebrow={assessments.length ? 'Your activity' : 'Start here'} title={assessments.length ? 'Recent purchases you considered' : 'Use a product you genuinely want'} />
@@ -229,7 +229,7 @@ function AuthCard({ onSignedIn }: { onSignedIn: () => void }) {
 }
 
 function AccountScreen({ session, subscription, assessments, purchases, onRefresh, onCancelTrial }: { session: Session | null; subscription: Subscription; assessments: Assessment[]; purchases: Record<string, Purchase>; onRefresh: () => void; onCancelTrial: () => void }) {
-  if (!session) return <ScrollView contentContainerStyle={styles.scrollContent}><SectionTitle eyebrow="Account" title="Save your decisions across devices" copy="Your signed-in purchase history is stored in Supabase. The native app keeps only the authentication session in secure device storage." /><AuthCard onSignedIn={onRefresh} /><Pressable onPress={() => Linking.openURL(WEB_HOW)}><Text style={styles.linkText}>How TruWorth works →</Text></Pressable></ScrollView>;
+  if (!session) return <ScrollView contentContainerStyle={styles.scrollContent}><SectionTitle eyebrow="Account" title="Save your decisions across devices" copy="Sign in to keep your saved assessments and purchase history synced across devices." /><AuthCard onSignedIn={onRefresh} /><Pressable onPress={() => Linking.openURL(WEB_HOW)}><Text style={styles.linkText}>How TruWorth works →</Text></Pressable></ScrollView>;
   const plus = subscription.tier === 'plus' && ['active', 'trialing'].includes(subscription.status);
   const trial = subscription.status === 'trialing';
   const bought = assessments.filter((item) => item.status === 'purchased' || purchases[item.id]).length;

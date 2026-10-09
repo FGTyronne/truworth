@@ -57,7 +57,7 @@
 
       <section class="home-paths">
         <a href="assess.html" class="home-path path-assess"><span>01</span><strong>Assess from scratch</strong><small>Already know what you’re considering? Start with the decision itself.</small></a>
-        <a href="assess.html?q=" class="home-path path-search"><span>02</span><strong>Search for it</strong><small>Look for a product or service first, then bring the link back into TruWorth.</small></a>
+        <a href="assess.html?q=" class="home-path path-search"><span>02</span><strong>Search for it</strong><small>Look for a product first, then bring the link back into TruWorth.</small></a>
         <a href="assess.html?mode=link" class="home-path path-link"><span>03</span><strong>Already have a link?</strong><small>Paste it into the assessor. Sign in only if you want automatic page import and cloud saving.</small></a>
       </section>
 

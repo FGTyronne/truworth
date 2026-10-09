@@ -54,14 +54,14 @@
       ['☕', 'Home', 'coffee machine'],
       ['🧴', 'Beauty', 'skincare'],
       ['🏋️', 'Fitness', 'fitness equipment'],
-      ['✈️', 'Travel', 'holiday']
+      ['🎮', 'Gaming', 'game controller']
     ];
     layout('', '', `
       <section class="tw-home-hero">
         <div class="tw-home-copy">
           <span class="tw-eyebrow">A smarter reality-check before checkout</span>
           <h1>Before you buy,<br><span>check if it’s worth it.</span></h1>
-          <p>Pressure-test anything from headphones and holidays to subscriptions and home upgrades. TruWorth turns the decision into something you can actually compare.</p>
+          <p>Check products like headphones, phones, trainers, bags, skincare and home tech. TruWorth gives you a clear score based on the details you enter.</p>
           <div class="tw-home-actions">
             <a class="primary-button tw-big-cta" href="assess.html">Start assessment <span aria-hidden="true">→</span></a>
             <a class="secondary-button tw-example-cta" href="assess.html?q=headphones">Browse an example</a>
@@ -82,7 +82,7 @@
       <section class="tw-home-section tw-how-section">
         <div class="tw-section-heading"><div><span>How it works</span><h2>Three quick steps. No spreadsheet energy.</h2></div></div>
         <div class="tw-step-grid">
-          <a href="assess.html" class="tw-step-card mint"><span>1</span><div class="tw-step-icon">＋</div><strong>Add what you want</strong><small>Type the item, service or subscription and what it costs.</small></a>
+          <a href="assess.html" class="tw-step-card mint"><span>1</span><div class="tw-step-icon">＋</div><strong>Add what you want</strong><small>Type the product and what it costs.</small></a>
           <article class="tw-step-card lilac"><span>2</span><div class="tw-step-icon">◎</div><strong>Reality-check it</strong><small>Use, enjoyment, effort and alternatives become one consistent score.</small></article>
           <article class="tw-step-card peach"><span>3</span><div class="tw-step-icon">💡</div><strong>Decide smarter</strong><small>See what is helping or hurting the case before you spend.</small></article>
         </div>
@@ -97,7 +97,7 @@
 
       <section class="tw-home-section tw-recent-section">
         <div class="tw-section-heading"><div><span>${records.length ? 'Your activity' : 'Start somewhere real'}</span><h2>${records.length ? 'Recent considerations' : 'What are you tempted by right now?'}</h2></div>${records.length ? '<a href="watchlist.html">View library</a>' : ''}</div>
-        ${records.length ? `<div class="product-list tw-home-products">${ranked.map((r, i) => productRow(r, i + 1)).join('')}</div>` : `<div class="tw-empty-play"><div class="tw-empty-bubbles"><span>🎧 Headphones</span><span>🏖️ Holiday</span><span>📱 New phone</span><span>☕ Coffee machine</span><span>👜 Bag</span></div><p>Use something you genuinely want. The result is more useful when the temptation is real.</p><a class="primary-button" href="assess.html">Assess my first purchase</a></div>`}
+        ${records.length ? `<div class="product-list tw-home-products">${ranked.map((r, i) => productRow(r, i + 1)).join('')}</div>` : `<div class="tw-empty-play"><div class="tw-empty-bubbles"><span>🎧 Headphones</span><span>🎮 Game controller</span><span>📱 New phone</span><span>☕ Coffee machine</span><span>👜 Bag</span></div><p>Use something you genuinely want. The result is more useful when the temptation is real.</p><a class="primary-button" href="assess.html">Assess my first purchase</a></div>`}
       </section>
     `, { compact: true });
     markPage();
@@ -122,7 +122,7 @@
 
     const example = document.createElement('section');
     example.className = 'tw-assess-examples';
-    example.innerHTML = `<div><span>Examples</span><strong>Headphones, trainers, skincare, coffee machine, holiday, gym membership</strong></div><img src="${collageSrc}" alt="Examples of everyday purchases">`;
+    example.innerHTML = `<div><span>Examples</span><strong>Headphones, trainers, skincare, coffee machine, handbag, game controller</strong></div><img src="${collageSrc}" alt="Examples of everyday purchases">`;
     form.parentElement?.insertBefore(example, form);
 
     const discovery = form.querySelector('.discovery-card');

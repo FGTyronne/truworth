@@ -1,19 +1,28 @@
 (() => {
-  const heroSrc = 'assets/hero-products.webp?v=20261009h';
+  const heroSrc = 'assets/hero-products.webp?v=20261009i';
 
   function plainFooterLinks() {
     const footer = document.querySelector('.site-footer');
     if (!footer) return;
-    const expected = 'tw21';
-    if (footer.dataset.footerVersion === expected) return;
-    footer.dataset.footerVersion = expected;
-    footer.innerHTML = [
-      ['Privacy', 'privacy.html'],
-      ['Terms', 'terms.html'],
-      ['How TruWorth works', 'decision-support.html'],
-      ['Membership', 'plans.html'],
-      ['Settings', 'settings.html']
-    ].map(([label, href]) => `<a href="${href}">${label}</a>`).join('');
+    const links = [...footer.querySelectorAll('a')];
+    const correct = links.length === 5
+      && links.some((link) => link.getAttribute('href') === 'decision-support.html' && /How TruWorth works/i.test(link.textContent || ''))
+      && links.some((link) => link.getAttribute('href') === 'privacy.html')
+      && links.some((link) => link.getAttribute('href') === 'terms.html')
+      && links.some((link) => link.getAttribute('href') === 'plans.html')
+      && links.some((link) => link.getAttribute('href') === 'settings.html');
+
+    if (!correct) {
+      footer.innerHTML = [
+        ['Privacy', 'privacy.html'],
+        ['Terms', 'terms.html'],
+        ['How TruWorth works', 'decision-support.html'],
+        ['Membership', 'plans.html'],
+        ['Settings', 'settings.html']
+      ].map(([label, href]) => `<a href="${href}">${label}</a>`).join('');
+    }
+
+    footer.dataset.footerVersion = 'tw21';
     footer.style.pointerEvents = 'auto';
     footer.querySelectorAll('a').forEach((link) => {
       link.style.pointerEvents = 'auto';
@@ -25,7 +34,7 @@
   function replaceHeroArtwork() {
     const homeImage = document.querySelector('.tw-collage-card img');
     if (homeImage) {
-      homeImage.src = heroSrc;
+      if (homeImage.getAttribute('src') !== heroSrc) homeImage.src = heroSrc;
       homeImage.alt = 'Examples of purchases including headphones, trainers, a handbag, skincare, a smartwatch, a game controller and a coffee machine';
       homeImage.loading = 'eager';
       homeImage.decoding = 'async';
@@ -34,7 +43,7 @@
     }
     const assessImage = document.querySelector('.tw-assess-examples img');
     if (assessImage) {
-      assessImage.src = heroSrc;
+      if (assessImage.getAttribute('src') !== heroSrc) assessImage.src = heroSrc;
       assessImage.alt = 'Examples of everyday purchases';
       assessImage.loading = 'lazy';
       assessImage.decoding = 'async';
@@ -121,11 +130,11 @@
 
   window.addEventListener('truworth:release-ready', () => {
     apply();
-    [120, 650, 1300, 1900].forEach((delay) => setTimeout(apply, delay));
+    [120, 650, 1300, 2100, 3200].forEach((delay) => setTimeout(apply, delay));
   }, { once: true });
 
   if (window.__TRUWORTH_RELEASE_READY__) {
     apply();
-    [120, 650, 1300].forEach((delay) => setTimeout(apply, delay));
+    [120, 650, 1300, 2100, 3200].forEach((delay) => setTimeout(apply, delay));
   }
 })();

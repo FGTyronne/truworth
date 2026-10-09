@@ -1,5 +1,5 @@
 (async()=>{
-  const version='20261008d';
+  const version='20261009a';
   const files=[
     'core-v2.js',
     'boot-gate.js',
@@ -9,11 +9,6 @@
     'account-v2.js',
     'route-gate.js',
     'release-v6.js',
-    'snap-v7.js',
-    'barcode-polyfill-v19.js',
-    'vision-v20.js',
-    'snap-ocr-guard-v19.js',
-    'snap-nearby-v8.js',
     'patch-v12.js',
     'audit-core-v14.js',
     'audit-product-v14.js',

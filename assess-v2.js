@@ -13,14 +13,14 @@ function homePage() {
         <p>Paste a link if you already found it, or type what you are looking for and TruWorth will help you move from search to assessment.</p>
         <form id="homeProductSearch" class="home-search-bar">
           ${icon('search')}
-          <input id="homeProductUrl" type="search" placeholder="Paste a link or search for a product or service" aria-label="Product link or search">
+          <input id="homeProductUrl" type="search" placeholder="Paste a link or search for a product" aria-label="Product link or search">
           <button class="primary-button" type="submit">Continue</button>
         </form>
       </div>
       ${records.length ? `<div class="home-stats"><span><strong>${records.length}</strong> saved</span><span><strong>${purchasedCount}</strong> purchased</span>${best ? `<span><strong>${best.score}</strong> current best score</span>` : ''}</div>` : ''}
       <section class="home-library">
         <div class="home-library-head"><h2>${records.length ? 'Your saved products' : 'Your product history starts here'}</h2>${records.length ? '<a href="watchlist.html">View all</a>' : ''}</div>
-        ${records.length ? `<div class="product-list">${ranked.map((r, i) => productRow(r, i + 1)).join('')}</div>` : `<div class="home-empty"><p>Assess something you are considering and it will stay here with its original link and score.</p><a class="secondary-button" href="assess.html">Start without a link</a></div>`}
+        ${records.length ? `<div class="product-list">${ranked.map((r, i) => productRow(r, i + 1)).join('')}</div>` : `<div class="home-empty"><p>Assess a product you are considering and it will stay here with its original link and score.</p><a class="secondary-button" href="assess.html">Start without a link</a></div>`}
       </section>
     </section>`, { compact: true });
   $('homeProductSearch').addEventListener('submit', (event) => {
@@ -42,28 +42,28 @@ function assessmentForm() {
   return `<section class="assessment-layout">
     <form id="assessment" class="assessment-form" novalidate>
       <div class="discovery-card">
-        <label for="discoveryQuery">Find a product or service</label>
-        <div class="discovery-row"><input id="discoveryQuery" type="search" placeholder="e.g. Sony headphones or dog groomer near Camden"><button class="secondary-button search-handoff" id="searchGoogle" type="button">Search Google</button></div>
-        <p id="discoveryStatus" class="discovery-note"><strong>How it works:</strong> Google opens in a new tab. Pick the result you want, copy its link and paste it into TruWorth below.</p>
+        <label for="discoveryQuery">Find a product</label>
+        <div class="discovery-row"><input id="discoveryQuery" type="search" placeholder="e.g. Sony headphones or espresso machine"><button class="secondary-button search-handoff" id="searchGoogle" type="button">Search Google</button></div>
+        <p id="discoveryStatus" class="discovery-note"><strong>How it works:</strong> Google opens in a new tab. Pick the product you want, copy its link and paste it into TruWorth below.</p>
       </div>
 
       <div class="import-card">
-        <label for="productUrl">Product or service link ${help("Paste the page you are considering buying from. TruWorth will try to pull the name, image, provider and price when the page exposes them.")}</label>
-        <div class="import-row"><input id="productUrl" name="source_url" type="url" inputmode="url" placeholder="https://seller.com/item-or-service"><button class="secondary-button" id="importProduct" type="button">Import</button></div>
+        <label for="productUrl">Product link ${help("Paste the retailer page for the product you are considering. TruWorth will try to pull the name, image, seller and price when the page exposes them.")}</label>
+        <div class="import-row"><input id="productUrl" name="source_url" type="url" inputmode="url" placeholder="https://seller.com/product"><button class="secondary-button" id="importProduct" type="button">Import</button></div>
         <p id="importStatus" class="field-hint">${user ? 'We will fill in what the page exposes, then you can correct anything before scoring.' : 'Sign in to import details automatically, or continue manually.'}</p>
       </div>
 
       <div class="form-section"><div class="form-section-heading"><span>What are you considering?</span><small>Name, price and source</small></div>
-        <div class="form-grid two"><label class="field span-2"><span>Product or service</span><input class="input" id="item" name="item" maxlength="200" required placeholder="e.g. Sony WH-1000XM6 or monthly gym membership"></label>
+        <div class="form-grid two"><label class="field span-2"><span>Product</span><input class="input" id="item" name="item" maxlength="200" required placeholder="e.g. Sony WH-1000XM6 or espresso machine"></label>
         <label class="field"><span>Brand</span><input class="input" id="brand" name="brand" maxlength="120" placeholder="Optional"></label>
-        <label class="field"><span>Seller or provider</span><input class="input" id="retailer" name="retailer" maxlength="120" placeholder="Optional"></label>
+        <label class="field"><span>Retailer or seller</span><input class="input" id="retailer" name="retailer" maxlength="120" placeholder="Optional"></label>
         <label class="field"><span>Price</span><div class="money-input"><span>£</span><input class="input" id="price" name="price" type="number" min="0" max="10000000" step="0.01" required placeholder="0.00"></div></label>
-        <label class="field"><span>Extra lifetime costs ${help("Include spending after the initial price: subscriptions, accessories, refills, maintenance or servicing. Example: £8 per month for filters over two years is £192.")}</span><div class="money-input"><span>£</span><input class="input" id="upkeep" name="upkeep" type="number" min="0" max="10000000" step="0.01" value="0" required></div></label></div>
+        <label class="field"><span>Extra lifetime costs ${help("Include spending after the initial price: accessories, refills, replacement parts, maintenance or servicing. Example: £8 per month for filters over two years is £192.")}</span><div class="money-input"><span>£</span><input class="input" id="upkeep" name="upkeep" type="number" min="0" max="10000000" step="0.01" value="0" required></div></label></div>
       </div>
 
       <div class="form-section"><div class="form-section-heading"><span>How you will use it</span><small>Your realistic estimate</small></div>
-        <div class="form-grid two"><label class="field"><span>Expected uses ${help("Estimate how many times you will realistically use it before replacing it, cancelling it or losing interest. Example: 3 uses a week for 2 years is about 300 uses.")}</span><input class="input" id="uses" name="uses" type="number" min="1" max="1000000" step="1" required placeholder="50"></label>
-        <label class="field"><span>Setup & upkeep hours ${help("Count the time spent assembling, learning, charging, cleaning, maintaining or managing it over its useful life. If there is virtually none, enter 0.")}</span><input class="input" id="effort" name="effort" type="number" min="0" max="100000" step="0.25" value="0" required></label>
+        <div class="form-grid two"><label class="field"><span>Expected uses ${help("Estimate how many times you will realistically use it before replacing it or losing interest. Example: 3 uses a week for 2 years is about 300 uses.")}</span><input class="input" id="uses" name="uses" type="number" min="1" max="1000000" step="1" required placeholder="50"></label>
+        <label class="field"><span>Setup & upkeep hours ${help("Count the time spent assembling, learning, charging, cleaning or maintaining it over its useful life. If there is virtually none, enter 0.")}</span><input class="input" id="effort" name="effort" type="number" min="0" max="100000" step="0.25" value="0" required></label>
         <label class="field span-2"><span>Enjoyment after the novelty wears off ${help("Score the enjoyment you expect once the initial excitement fades. A 7 means you still expect to genuinely enjoy or appreciate it long term.")}</span><div class="range-row"><input id="joy" name="joy" type="range" min="1" max="10" value="5"><output id="joyout" for="joy">5/10</output></div></label>
         <label class="field"><span>Minutes saved per use ${help("How much time does this save compared with what you do now? Example: a robot vacuum that saves about 20 minutes each clean = 20. If it saves no time, enter 0.")}</span><input class="input" id="minutes" name="minutes" type="number" min="0" max="10000" step="1" value="0" required></label>
         <label class="field"><span>Value of an hour to you ${help("This is a rough personal value for your time, not necessarily your wage. It lets TruWorth value genuine time savings. If unsure, £15 is a reasonable neutral starting point.")}</span><div class="money-input"><span>£</span><input class="input" id="hourValue" name="hourValue" type="number" min="0" max="100000" step="1" value="15" required></div></label></div>
@@ -75,7 +75,7 @@ function assessmentForm() {
           <label><input type="radio" name="motive" value="joy"><span><strong>Enjoyment</strong><small>Something you genuinely value</small></span></label>
           <label><input type="radio" name="motive" value="image"><span><strong>Impulse</strong><small>Trend, status or quick want</small></span></label>
         </div>
-        <label class="field"><span>Alternative you already have ${help("What could do the same job without this purchase? Example: your current headphones, taking the bus, your existing software plan or doing the task yourself.")}</span><input class="input" id="alternative" name="alternative" maxlength="160" placeholder="Optional"></label>
+        <label class="field"><span>Alternative you already have ${help("What could do the same job without this purchase? Example: your current headphones, older phone, existing coffee machine or something you could borrow.")}</span><input class="input" id="alternative" name="alternative" maxlength="160" placeholder="Optional"></label>
       </div>
 
       <input id="imageUrl" name="image_url" type="hidden"><input id="canonicalUrl" name="canonical_url" type="hidden"><input id="currency" name="currency" type="hidden" value="GBP">
@@ -88,7 +88,7 @@ function assessmentForm() {
 }
 
 function assessPage() {
-  layout('Assess a product or service', 'Put the decision through a quick reality check.', assessmentForm(), { kicker: 'New assessment' });
+  layout('Assess a product', 'Put the purchase through a quick check.', assessmentForm(), { kicker: 'New assessment' });
   $('joy').addEventListener('input', () => { $('joyout').value = `${$('joy').value}/10`; });
   $('searchGoogle').addEventListener('click', openGoogleSearch);
   $('discoveryQuery').addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); openGoogleSearch(); } });
@@ -113,13 +113,13 @@ function openGoogleSearch() {
   }
   const target = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
   window.open(target, '_blank', 'noopener,noreferrer');
-  status.innerHTML = '<strong>Google is open.</strong> Choose a result, copy its page link, then paste it into the field below.';
+  status.innerHTML = '<strong>Google is open.</strong> Choose the product, copy its page link, then paste it into the field below.';
 }
 
 async function importProductFromUrl() {
   const status = $('importStatus');
   const url = $('productUrl').value.trim();
-  if (!url) { status.textContent = 'Paste a product or service link first.'; return; }
+  if (!url) { status.textContent = 'Paste a product link first.'; return; }
   if (!user || !supabaseClient) { status.innerHTML = 'Sign in to import details automatically. <a href="account.html">Sign in</a>'; return; }
   status.textContent = 'Importing page details...';
   $('importProduct').disabled = true;

@@ -225,6 +225,12 @@
     finishShell();
   }
 
-  window.addEventListener('truworth:release-ready', init, { once: true });
-  if (window.__TRUWORTH_RELEASE_READY__) init();
+  function settleExperience() {
+    init();
+    setTimeout(init, 450);
+    setTimeout(init, 1100);
+  }
+
+  window.addEventListener('truworth:release-ready', settleExperience, { once: true });
+  if (window.__TRUWORTH_RELEASE_READY__) settleExperience();
 })();

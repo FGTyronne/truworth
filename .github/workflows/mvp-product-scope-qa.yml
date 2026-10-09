@@ -1,0 +1,55 @@
+name: TruWorth MVP Product Scope QA
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save playwright-core@1.56.1
+      - name: Validate physical-product MVP scope
+        run: |
+          cat > qa.mjs <<'EOF'
+          import { chromium } from 'playwright-core';
+          import fs from 'fs';
+          const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(fs.existsSync);
+          if(!executablePath) throw new Error('Chrome not found');
+          const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox']});
+          const context=await browser.newContext({viewport:{width:390,height:900}});
+          const page=await context.newPage();
+          const failures=[];
+          page.on('pageerror', e=>failures.push(`pageerror: ${e.message}`));
+
+          await page.goto('https://truworth.vercel.app/',{waitUntil:'domcontentloaded',timeout:30000});
+          await page.waitForSelector('.tw-home-hero',{timeout:15000});
+          await page.waitForTimeout(3500);
+          const home=await page.locator('main').innerText();
+          if(/\bholiday(s)?\b|\bsubscription(s)?\b|\btravel\b|product or service|item, service or subscription/i.test(home)) failures.push('Out-of-scope Home copy remains');
+          const cats=await page.locator('.tw-category-card strong').allTextContents();
+          const expected=['Tech','Fashion','Home','Beauty','Fitness','Gaming'];
+          if(JSON.stringify(cats)!==JSON.stringify(expected)) failures.push(`Unexpected categories: ${JSON.stringify(cats)}`);
+
+          await page.goto('https://truworth.vercel.app/assess.html',{waitUntil:'domcontentloaded',timeout:30000});
+          await page.waitForSelector('#assessment',{timeout:15000});
+          await page.waitForTimeout(3500);
+          const assess=await page.locator('main').innerText();
+          if(/product or service|dog groomer|gym membership|\bholiday(s)?\b|\bsubscription(s)?\b/i.test(assess)) failures.push('Out-of-scope Assessment copy remains');
+          const productLabel=await page.locator('label:has(#item) > span').first().innerText();
+          if(productLabel.trim()!=='Product') failures.push(`Product label wrong: ${productLabel}`);
+
+          await page.goto('https://truworth.vercel.app/decision-support.html',{waitUntil:'domcontentloaded',timeout:30000});
+          const method=await page.locator('main').innerText();
+          if(!/MVP is designed for physical consumer products/i.test(method)) failures.push('Methodology does not state physical-product scope');
+          if(!/Travel, holidays, subscriptions and general services are not part of the current scoring model/i.test(method)) failures.push('Deferred scope not stated');
+
+          await browser.close();
+          if(failures.length){ console.error('FAILURES\n'+failures.join('\n')); process.exit(1); }
+          console.log('TRUWORTH_MVP_PRODUCT_SCOPE_QA_PASS');
+          EOF
+          node qa.mjs

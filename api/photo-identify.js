@@ -73,7 +73,17 @@ async function getGatewayToken() {
   }
 }
 
-function gatewayFailure(status) {
+function gatewayFailure(status, rawText = '') {
+  let providerType = '';
+  try {
+    providerType = JSON.parse(rawText)?.error?.type || '';
+  } catch {}
+  if (providerType === 'customer_verification_required') {
+    return {
+      error: 'AI vision requires billing verification before it can run.',
+      code: 'gateway_customer_verification',
+    };
+  }
   if (status === 401 || status === 403) return { error: 'AI vision gateway authentication failed.', code: `gateway_${status}` };
   if (status === 402) return { error: 'AI Gateway credits are unavailable for this account.', code: 'gateway_402' };
   if (status === 429) return { error: 'AI vision is temporarily rate limited. Try again shortly.', code: 'gateway_429' };
@@ -150,7 +160,7 @@ export default async function handler(req, res) {
     if (!gatewayResponse.ok) {
       const gatewayText = await gatewayResponse.text();
       console.error('AI Gateway photo-identify failed', gatewayResponse.status, gatewayText.slice(0, 700));
-      return res.status(502).json(gatewayFailure(gatewayResponse.status));
+      return res.status(502).json(gatewayFailure(gatewayResponse.status, gatewayText));
     }
 
     const payload = await gatewayResponse.json();

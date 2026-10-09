@@ -1,0 +1,26 @@
+name: TruWorth Mobile MVP QA
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install native app dependencies
+        working-directory: mobile
+        run: npm install --no-audit --no-fund
+      - name: Typecheck native app
+        working-directory: mobile
+        run: npm run typecheck
+      - name: Validate Expo configuration
+        working-directory: mobile
+        run: npx expo config --type public > /tmp/truworth-expo-config.json
+      - name: Bundle Android JavaScript
+        working-directory: mobile
+        run: npx expo export --platform android --output-dir dist-ci

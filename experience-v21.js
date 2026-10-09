@@ -43,9 +43,10 @@
         footerRepairQueued = false;
         plainFooterLinks();
         ensureDecisionLinks();
+        cleanPurchaseScope();
       });
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
   }
 
   function replaceHeroArtwork() {
@@ -61,21 +62,21 @@
     const assessImage = document.querySelector('.tw-assess-examples img');
     if (assessImage) {
       if (assessImage.getAttribute('src') !== heroSrc) assessImage.src = heroSrc;
-      assessImage.alt = 'Examples of everyday purchases';
+      assessImage.alt = 'Examples of everyday products';
       assessImage.loading = 'lazy';
       assessImage.decoding = 'async';
     }
   }
 
   function setText(selector, text) {
-    const node = document.querySelector(selector);
-    if (node) node.textContent = text;
+    const node = typeof selector === 'string' ? document.querySelector(selector) : selector;
+    if (node && node.textContent !== text) node.textContent = text;
   }
 
   function cleanHomeCopy() {
     if (typeof page !== 'function' || page() !== 'home') return;
     setText('.tw-eyebrow', 'A quick check before you buy');
-    setText('.tw-home-copy > p', 'Check anything from headphones and holidays to subscriptions and home upgrades. TruWorth gives you a clear score based on the details you enter.');
+    setText('.tw-home-copy > p', 'Check products like headphones, phones, trainers, bags, skincare and home tech. TruWorth gives you a clear score based on the details you enter.');
 
     const trust = document.querySelector('.tw-home-trust');
     if (trust) trust.innerHTML = '<span><b>✓</b>No account needed</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>Clear 0–100 score</span>';
@@ -106,6 +107,58 @@
         if (copy) copy.textContent = 'See the main reasons behind your score before you spend.';
       }
     });
+  }
+
+  function cleanPurchaseScope() {
+    const current = typeof page === 'function' ? page() : '';
+
+    if (current === 'home') {
+      const firstStep = document.querySelector('.tw-step-card');
+      if (firstStep) {
+        setText(firstStep.querySelector('strong'), 'Add the product');
+        setText(firstStep.querySelector('small'), 'Type the product and what it costs.');
+      }
+
+      const categoryHeading = document.querySelector('.tw-category-section .tw-section-heading > div > span');
+      setText(categoryHeading, 'Popular categories');
+      const grid = document.querySelector('.tw-category-grid');
+      if (grid) {
+        const wanted = [
+          ['🎧', 'Tech', 'headphones'],
+          ['👟', 'Fashion', 'trainers'],
+          ['☕', 'Home', 'coffee machine'],
+          ['🧴', 'Beauty', 'skincare'],
+          ['🏋️', 'Fitness', 'fitness equipment'],
+          ['🎮', 'Gaming', 'game controller']
+        ].map(([emoji, label, query], i) => `<a class="tw-category-card c${i + 1}" href="assess.html?q=${encodeURIComponent(query)}"><span>${emoji}</span><strong>${label}</strong></a>`).join('');
+        if (grid.innerHTML !== wanted) grid.innerHTML = wanted;
+      }
+
+      const bubbles = document.querySelector('.tw-empty-bubbles');
+      if (bubbles) {
+        const wanted = '<span>🎧 Headphones</span><span>📱 New phone</span><span>☕ Coffee machine</span><span>👜 Bag</span><span>🎮 Game controller</span>';
+        if (bubbles.innerHTML !== wanted) bubbles.innerHTML = wanted;
+      }
+    }
+
+    if (current === 'assess') {
+      setText('.tw-assess-examples strong', 'Headphones, trainers, skincare, coffee machine, handbag, game controller');
+      setText('label[for="discoveryQuery"]', 'Find a product');
+      const discovery = document.getElementById('discoveryQuery');
+      if (discovery && discovery.placeholder !== 'e.g. Sony headphones or espresso machine') discovery.placeholder = 'e.g. Sony headphones or espresso machine';
+      const productUrl = document.getElementById('productUrl');
+      if (productUrl && productUrl.placeholder !== 'https://seller.com/product') productUrl.placeholder = 'https://seller.com/product';
+      const item = document.getElementById('item');
+      if (item && item.placeholder !== 'e.g. Sony WH-1000XM6 or espresso machine') item.placeholder = 'e.g. Sony WH-1000XM6 or espresso machine';
+
+      const productUrlLabel = document.querySelector('label[for="productUrl"]');
+      if (productUrlLabel?.firstChild?.nodeType === Node.TEXT_NODE && !/^Product link/.test(productUrlLabel.firstChild.nodeValue || '')) productUrlLabel.firstChild.nodeValue = 'Product link ';
+      setText(document.querySelector('label:has(#item) > span'), 'Product');
+      setText(document.querySelector('label:has(#retailer) > span'), 'Retailer or seller');
+
+      const status = document.getElementById('importStatus');
+      if (status && /product or service link/i.test(status.textContent || '')) status.textContent = (status.textContent || '').replace(/product or service link/ig, 'product link');
+    }
   }
 
   function cleanAssessmentCopy() {
@@ -140,6 +193,7 @@
     watchFooter();
     replaceHeroArtwork();
     cleanHomeCopy();
+    cleanPurchaseScope();
     cleanAssessmentCopy();
     cleanLibraryCopy();
     cleanResultCopy();

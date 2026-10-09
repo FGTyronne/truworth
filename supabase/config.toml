@@ -16,5 +16,8 @@ verify_jwt = true
 [functions.stripe-webhook]
 verify_jwt = false
 
+[functions.renewal-reminders]
+verify_jwt = false
+
 [functions.voucher-admin]
 verify_jwt = true

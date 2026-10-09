@@ -1,5 +1,7 @@
 (() => {
   const heroSrc = 'assets/hero-products.webp?v=20261009i';
+  let footerWatcherStarted = false;
+  let footerRepairQueued = false;
 
   function plainFooterLinks() {
     const footer = document.querySelector('.site-footer');
@@ -29,6 +31,21 @@
       link.style.position = 'relative';
       link.style.zIndex = '2';
     });
+  }
+
+  function watchFooter() {
+    if (footerWatcherStarted || !document.body) return;
+    footerWatcherStarted = true;
+    const observer = new MutationObserver(() => {
+      if (footerRepairQueued) return;
+      footerRepairQueued = true;
+      queueMicrotask(() => {
+        footerRepairQueued = false;
+        plainFooterLinks();
+        ensureDecisionLinks();
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   function replaceHeroArtwork() {
@@ -120,6 +137,7 @@
 
   function apply() {
     plainFooterLinks();
+    watchFooter();
     replaceHeroArtwork();
     cleanHomeCopy();
     cleanAssessmentCopy();

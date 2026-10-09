@@ -6,43 +6,53 @@ permissions:
   contents: write
 jobs:
   cleanup:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Remove deferred use cases from active source
+      - name: Remove non-product MVP language
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          p = Path('mobile/App.tsx')
-          s = p.read_text()
-          s = s.replace('copy="The MVP is focused on physical consumer products."', 'copy="Tech, fashion, home, beauty, fitness and gaming products."')
-          s = s.replace('copy="Your signed-in purchase history is stored in Supabase. The native app keeps only the authentication session in secure device storage."', 'copy="Sign in to keep your saved assessments and purchase history synced across devices."')
-          s = s.replace('<View style={styles.proofRow}><Text style={styles.proof}>✓ About 2 minutes</Text><Text style={styles.proof}>✓ Clear 0–100 score</Text></View>', '<View style={styles.proofRow}><Text style={styles.proof}>✓ No account needed</Text><Text style={styles.proof}>✓ About 2 minutes</Text><Text style={styles.proof}>✓ Clear 0–100 score</Text></View>')
-          p.write_text(s)
+          replacements = {
+            'release-v6.js': [
+              ('Find a product or service', 'Find a product'),
+              ('Headphones. A holiday. A new phone. A gym membership. A ridiculously expensive coffee machine. Anything works.', 'Headphones. A new phone. Trainers. A handbag. A coffee machine. Start with a product you are actually considering.'),
+              ('Look for a product or service first, then bring the link back into TruWorth.', 'Look for a product first, then bring the link back into TruWorth.'),
+            ],
+            'experience-v18.js': [
+              ('Check anything from headphones and holidays to subscriptions and home upgrades. TruWorth turns the purchase into a clear, consistent decision.', 'Check products like headphones, phones, trainers, bags, skincare and home tech. TruWorth gives you a clear score based on the details you enter.'),
+            ],
+            'patch-v9.js': [
+              ('Choose the exact product or service, copy its page link, then paste it below.', 'Choose the exact product, copy its page link, then paste it below.'),
+            ],
+            'NEXT_PATCH.md': [
+              ('Find a product or service flow', 'Find a product flow'),
+              ('Product/service terminology across the assessor where appropriate.', 'Product terminology across the assessor.'),
+            ],
+            'decision-support.html': [
+              ('          <p>Travel, holidays, subscriptions and general services are not part of the current scoring model. They may be added later with scoring designed specifically for those types of decisions.</p>\n', ''),
+            ],
+            'mobile/README.md': [
+              ('The assessment model is intentionally limited to **physical consumer products**: technology, fashion, home products, beauty, fitness equipment, gaming products and similar goods. Travel, holidays, subscriptions and general services are deferred until they have scoring designed for those decisions.', 'The assessment model is intentionally limited to **physical consumer products**: technology, fashion, home products, beauty, fitness equipment, gaming products and similar goods.'),
+            ],
+          }
 
-          p = Path('experience-v17.js')
-          s = p.read_text()
-          s = s.replace('Pressure-test anything from headphones and holidays to subscriptions and home upgrades. TruWorth turns the decision into something you can actually compare.', 'Check products like headphones, phones, trainers, bags, skincare and home tech. TruWorth gives you a clear score based on the details you enter.')
-          s = s.replace("['✈️', 'Travel', 'holiday']", "['🎮', 'Gaming', 'game controller']")
-          s = s.replace('Type the item, service or subscription and what it costs.', 'Type the product and what it costs.')
-          s = s.replace('<span>🏖️ Holiday</span>', '<span>🎮 Game controller</span>')
-          s = s.replace('Headphones, trainers, skincare, coffee machine, holiday, gym membership', 'Headphones, trainers, skincare, coffee machine, handbag, game controller')
-          p.write_text(s)
-
-          p = Path('release-v6.js')
-          s = p.read_text().replace('Look for a product or service first, then bring the link back into TruWorth.', 'Look for a product first, then bring the link back into TruWorth.')
-          p.write_text(s)
-
-          p = Path('decision-support.html')
-          s = p.read_text().replace('The MVP is designed for physical consumer products:', 'TruWorth currently assesses physical consumer products:')
-          p.write_text(s)
+          for name, pairs in replacements.items():
+            p = Path(name)
+            if not p.exists():
+              continue
+            s = p.read_text()
+            for old, new in pairs:
+              s = s.replace(old, new)
+            p.write_text(s)
           PY
-      - name: Commit cleanup if needed
+      - name: Commit source cleanup
         run: |
-          if git diff --quiet; then exit 0; fi
           git config user.name "Tyronne Ramella"
           git config user.email "89127492+FGTyronne@users.noreply.github.com"
-          git add mobile/App.tsx experience-v17.js release-v6.js decision-support.html
-          git commit -m "Keep active product scope consistent"
+          git rm .github/workflows/product-scope-source-cleanup.yml
+          git add release-v6.js experience-v18.js patch-v9.js NEXT_PATCH.md decision-support.html mobile/README.md
+          git commit -m "Keep MVP focused on physical products"
           git push

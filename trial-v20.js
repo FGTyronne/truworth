@@ -26,8 +26,24 @@
   function removeNotice() { document.getElementById('twTrialNotice')?.remove(); }
   function closeReview() { document.getElementById('twTrialReview')?.remove(); document.body.classList.remove('tw-trial-modal-open'); }
 
+  function decorateCancelledTrial() {
+    if (String(subscription?.status || '') !== 'trialing' || !subscription?.cancel_at_period_end) return;
+    const end = trialEndDate();
+    const endText = end ? dateLabel(end) : 'the end of the trial';
+    const badge = document.querySelector('.tw-account-plan-badge');
+    if (badge) badge.textContent = 'Trial ending';
+    const accountPlan = document.querySelector('.tw-account-plan-head p');
+    if (accountPlan) accountPlan.textContent = `Cancellation is scheduled. TruWorth+ stays active until ${endText}, and no first subscription payment will be taken.`;
+    document.querySelectorAll('.plan-status').forEach((status) => {
+      if (/trial active/i.test(status.textContent || '')) status.textContent = 'Cancels at trial end';
+    });
+    const subscriptionNote = document.querySelector('.tw-subscription-note');
+    if (subscriptionNote) subscriptionNote.textContent = `Trial cancellation scheduled. Access ends ${endText}. No first subscription payment will be taken.`;
+  }
+
   function showCancelled(review, accessEnd) {
     const end = accessEnd ? new Date(accessEnd) : trialEndDate();
+    decorateCancelledTrial();
     review.querySelector('.tw-trial-dialog').innerHTML = `<div class="tw-trial-success"><span>✓</span><h2>Trial cancellation confirmed</h2><p>You can keep using TruWorth+ until ${safeTrial(end ? dateLabel(end) : 'the end of your trial')}. No subscription payment will be taken when the trial ends.</p><small>A confirmation email is being sent to your account email address.</small><button class="primary-button" type="button" data-trial-done>Done</button></div>`;
     review.querySelector('[data-trial-done]')?.addEventListener('click', closeReview);
   }
@@ -36,7 +52,7 @@
     const end = trialEndDate();
     const dialog = review.querySelector('.tw-trial-dialog');
     dialog.innerHTML = `<div class="tw-trial-dialog-head"><span>Cancel trial</span><h2>Cancel TruWorth+ before billing starts?</h2><p>You will keep TruWorth+ until ${safeTrial(end ? dateLabel(end) : 'the end of the trial')}. After that, the account returns to Free and no first subscription payment is taken.</p></div><div class="tw-trial-actions"><button class="secondary-button" type="button" data-trial-back>Go back</button><button class="danger-button" type="button" data-trial-confirm-cancel>Confirm cancellation</button></div><p class="form-message" data-trial-status role="status"></p>`;
-    dialog.querySelector('[data-trial-back]')?.addEventListener('click', () => openReview(true));
+    dialog.querySelector('[data-trial-back]')?.addEventListener('click', () => openReview());
     dialog.querySelector('[data-trial-confirm-cancel]')?.addEventListener('click', async (event) => {
       const button = event.currentTarget;
       const status = dialog.querySelector('[data-trial-status]');
@@ -45,6 +61,7 @@
         const data = await trialAction('cancel');
         subscription.cancel_at_period_end = true;
         subscription.trial_notice_acknowledged_at = new Date().toISOString();
+        if (data.access_end) subscription.trial_end = data.access_end;
         removeNotice();
         showCancelled(review, data.access_end);
       } catch (error) {
@@ -56,7 +73,7 @@
     });
   }
 
-  function openReview(reuse = false) {
+  function openReview() {
     if (!dueForReview()) return;
     let layer = document.getElementById('twTrialReview');
     if (!layer) {
@@ -101,10 +118,10 @@
     notice.innerHTML = `<div class="tw-trial-notice-icon">!</div><div class="tw-trial-notice-copy"><strong>Your trial ends tomorrow</strong><span>${safeTrial(planPrice())} is due to start ${safeTrial(end ? dateLabel(end) : '')}. Please review your trial before it ends.</span></div><button class="primary-button" type="button" data-trial-review>Review trial</button>`;
     const target = document.querySelector('.main-content') || document.querySelector('main') || document.body;
     target.prepend(notice);
-    notice.querySelector('[data-trial-review]')?.addEventListener('click', () => openReview());
+    notice.querySelector('[data-trial-review]')?.addEventListener('click', openReview);
   }
 
-  function applyTrialLifecycle() { renderTrialNotice(); }
+  function applyTrialLifecycle() { decorateCancelledTrial(); renderTrialNotice(); }
   window.addEventListener('truworth:release-ready', () => { applyTrialLifecycle(); setTimeout(applyTrialLifecycle, 250); setTimeout(applyTrialLifecycle, 900); }, { once: true });
   if (window.__TRUWORTH_RELEASE_READY__) applyTrialLifecycle();
 })();

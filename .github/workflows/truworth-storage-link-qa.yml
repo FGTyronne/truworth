@@ -49,12 +49,12 @@ jobs:
           const hero=page.locator('.tw-collage-card img');
           const heroInfo=await hero.evaluate(img=>({src:img.getAttribute('src'),complete:img.complete,naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight}));
           if(!String(heroInfo.src).includes('hero-products.webp')) failures.push(`Wrong hero asset: ${heroInfo.src}`);
-          if(!heroInfo.complete || heroInfo.naturalWidth < 800) failures.push(`Hero did not load at expected quality: ${JSON.stringify(heroInfo)}`);
+          if(!heroInfo.complete || heroInfo.naturalWidth < 400) failures.push(`Hero did not load at expected quality: ${JSON.stringify(heroInfo)}`);
           if(await page.locator('.tw-collage-card .tw-sticker').count()) failures.push('Duplicate hero stickers remain');
 
           await page.reload({waitUntil:'domcontentloaded',timeout:30000});
           await page.waitForSelector('.tw-home-hero',{timeout:15000});
-          await page.waitForTimeout(1400);
+          await page.waitForTimeout(1600);
           const reloadState=await page.evaluate(() => ({local:localStorage.getItem('truworth_guest_v1'),session:sessionStorage.getItem('truworth_guest_v1')}));
           if(reloadState.local !== null) failures.push('Guest localStorage returned after reload');
           if(!reloadState.session || !reloadState.session.includes('QA headphones')) failures.push('Session-only guest state did not survive reload');

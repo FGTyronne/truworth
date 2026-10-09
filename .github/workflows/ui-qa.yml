@@ -1,0 +1,71 @@
+name: TruWorth UI QA
+on:
+  push:
+    paths:
+      - '.github/workflows/ui-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser driver
+        run: npm install --no-save playwright-core@1.56.1
+      - name: Run production UI checks
+        run: |
+          cat > /tmp/ui-qa.mjs <<'EOF'
+          import { chromium } from 'playwright-core';
+          import fs from 'fs';
+          const candidates=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium-browser','/usr/bin/chromium'];
+          const executablePath=candidates.find((p)=>fs.existsSync(p));
+          if(!executablePath) throw new Error('No Chrome/Chromium executable found');
+          const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox']});
+          const pages=[
+            ['home','https://truworth.vercel.app/','.tw-home-hero'],
+            ['assess','https://truworth.vercel.app/assess.html','.tw-assess-examples'],
+            ['library','https://truworth.vercel.app/watchlist.html','.library-toolbar'],
+            ['insights','https://truworth.vercel.app/insights.html','.main-content'],
+            ['account','https://truworth.vercel.app/account.html','.main-content']
+          ];
+          const widths=[320,390,430,1024];
+          const failures=[];
+          for(const [name,url,selector] of pages){
+            for(const width of widths){
+              const context=await browser.newContext({viewport:{width,height:900}});
+              const page=await context.newPage();
+              const errors=[];
+              page.on('pageerror',e=>errors.push(`pageerror:${e.message}`));
+              page.on('console',m=>{if(m.type()==='error') errors.push(`console:${m.text()}`)});
+              const response=await page.goto(url,{waitUntil:'networkidle',timeout:60000});
+              if(!response || !response.ok()) failures.push(`${name}@${width}: HTTP ${response?.status()}`);
+              try{await page.waitForSelector('.tw17',{timeout:15000});}catch{failures.push(`${name}@${width}: .tw17 missing`)}
+              try{await page.waitForSelector(selector,{timeout:15000});}catch{failures.push(`${name}@${width}: ${selector} missing`)}
+              const metrics=await page.evaluate(()=>({
+                innerWidth:window.innerWidth,
+                scrollWidth:document.documentElement.scrollWidth,
+                hasBottomNav:!!document.querySelector('.bottom-nav'),
+                bodyText:(document.body.innerText||'').slice(0,6000)
+              }));
+              if(metrics.scrollWidth>metrics.innerWidth+3) failures.push(`${name}@${width}: horizontal overflow ${metrics.scrollWidth}>${metrics.innerWidth}`);
+              if(width<=430 && !metrics.hasBottomNav) failures.push(`${name}@${width}: bottom nav missing`);
+              if(errors.length) failures.push(`${name}@${width}: ${errors.join(' | ')}`);
+              console.log(JSON.stringify({name,width,scrollWidth:metrics.scrollWidth,innerWidth:metrics.innerWidth,ok:!failures.some(f=>f.startsWith(`${name}@${width}:`))}));
+              await context.close();
+            }
+          }
+          const context=await browser.newContext({viewport:{width:390,height:900}});
+          const home=await context.newPage();
+          await home.goto('https://truworth.vercel.app/',{waitUntil:'networkidle'});
+          await home.getByRole('link',{name:/Start assessment/i}).first().click();
+          await home.waitForURL(/assess\.html/,{timeout:15000});
+          if(!await home.locator('#assessment').count()) failures.push('Home CTA did not reach working assessment form');
+          await context.close();
+          await browser.close();
+          if(failures.length){console.error('FAILURES\n'+failures.join('\n'));process.exit(1)}
+          console.log('UI_QA_PASS');
+          EOF
+          node /tmp/ui-qa.mjs

@@ -9,7 +9,7 @@
     const eyebrow = document.querySelector('.tw-eyebrow');
     if (eyebrow) eyebrow.textContent = 'A smarter check before checkout';
     const lead = document.querySelector('.tw-home-copy > p');
-    if (lead) lead.textContent = 'Check anything from headphones and holidays to subscriptions and home upgrades. TruWorth turns the purchase into a clear, consistent decision.';
+    if (lead) lead.textContent = 'Check products like headphones, phones, trainers, bags, skincare and home tech. TruWorth gives you a clear score based on the details you enter.';
 
     const trust = document.querySelector('.tw-home-trust');
     if (trust) trust.innerHTML = '<span><b>✓</b>No account needed</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>0–100 result</span>';

@@ -4,7 +4,7 @@ This directory contains the native iOS/Android TruWorth MVP built with Expo and 
 
 ## MVP scope
 
-The assessment model is intentionally limited to **physical consumer products**: technology, fashion, home products, beauty, fitness equipment, gaming products and similar goods. Travel, holidays, subscriptions and general services are deferred until they have scoring designed for those decisions.
+The assessment model is intentionally limited to **physical consumer products**: technology, fashion, home products, beauty, fitness equipment, gaming products and similar goods.
 
 ## Data architecture
 

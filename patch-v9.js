@@ -173,7 +173,7 @@
     const query = field?.value.trim() || '';
     if (!query) { if (status) status.textContent = 'Type what you want to find first.'; return; }
     window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank', 'noopener,noreferrer');
-    if (status) status.innerHTML = '<strong>Search results are open.</strong> Choose the exact product or service, copy its page link, then paste it below.';
+    if (status) status.innerHTML = '<strong>Search results are open.</strong> Choose the exact product, copy its page link, then paste it below.';
   }
 
   async function importProduct() {

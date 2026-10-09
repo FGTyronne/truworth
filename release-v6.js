@@ -42,7 +42,7 @@
           <p>TruWorth helps you pressure-test a purchase before the excitement makes the decision for you.</p>
           <div class="home-primary-actions">
             <a class="primary-button hero-action" href="assess.html">Start a quick assessment</a>
-            <a class="secondary-button" href="assess.html?q=">Find a product or service</a>
+            <a class="secondary-button" href="assess.html?q=">Find a product</a>
           </div>
           <div class="home-trust"><span>No account needed to try it</span><span>About 2 minutes</span><span>Save later if you want</span></div>
         </div>
@@ -65,7 +65,7 @@
 
       <section class="home-library">
         <div class="home-library-head"><h2>${records.length ? 'Recent considerations' : 'Start with something you’re tempted by'}</h2>${records.length ? '<a href="watchlist.html">View all</a>' : ''}</div>
-        ${records.length ? `<div class="product-list">${ranked.map((r, i) => productRow(r, i + 1)).join('')}</div>` : `<div class="home-empty"><p>Headphones. A holiday. A new phone. A gym membership. A ridiculously expensive coffee machine. Anything works.</p><a class="text-button" href="assess.html">Try your first one →</a></div>`}
+        ${records.length ? `<div class="product-list">${ranked.map((r, i) => productRow(r, i + 1)).join('')}</div>` : `<div class="home-empty"><p>Headphones. A new phone. Trainers. A handbag. A coffee machine. Start with a product you are actually considering.</p><a class="text-button" href="assess.html">Try your first one →</a></div>`}
       </section>`, { compact: true });
   };
 

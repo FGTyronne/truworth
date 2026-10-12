@@ -7,51 +7,47 @@
   function improveHomeCopy() {
     if (page() !== 'home') return;
     const eyebrow = document.querySelector('.tw-eyebrow');
-    if (eyebrow) eyebrow.textContent = 'A smarter check before checkout';
+    if (eyebrow) eyebrow.textContent = 'Check before you spend';
     const lead = document.querySelector('.tw-home-copy > p');
-    if (lead) lead.textContent = 'Check products like headphones, phones, trainers, bags, skincare and home tech. TruWorth gives you a clear score based on the details you enter.';
+    if (lead) lead.textContent = 'Check products like headphones, phones, trainers, bags, skincare and home tech. Add the details, get a score, and see whether the purchase makes sense for you.';
 
     const trust = document.querySelector('.tw-home-trust');
-    if (trust) trust.innerHTML = '<span><b>✓</b>No account needed</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>0–100 result</span>';
+    if (trust) trust.innerHTML = '<span><b>✓</b>No account needed</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>Clear 0–100 score</span>';
 
     document.querySelectorAll('.tw-stat-strip article').forEach((card) => {
       const label = card.querySelector('b')?.textContent?.trim();
       const note = card.querySelector('small');
       if (!note) return;
-      if (label === 'Assessments') note.textContent = 'Purchases you have checked before buying';
-      if (label === 'Typical check') note.textContent = 'Quick enough to use before checkout';
-      if (label === 'Clear score') note.textContent = 'One consistent result you can compare';
+      if (label === 'Assessments') note.textContent = 'Purchases you have assessed';
+      if (label === 'Purchased') note.textContent = 'Items you have bought';
+      if (label === 'Average score') note.textContent = 'Across your saved assessments';
+      if (label === 'Typical check') note.textContent = 'Quick to complete';
+      if (label === 'Clear score') note.textContent = 'Easy to compare';
+      if (label === 'Try it first') note.textContent = 'Save your results if you want';
     });
 
     document.querySelectorAll('.tw-step-card').forEach((card) => {
       const title = card.querySelector('strong')?.textContent?.trim();
       const copy = card.querySelector('small');
-      if (title === 'Decide smarter' && copy) copy.textContent = 'See the main reasons behind your result before you spend.';
+      if (title === 'Decide smarter' && copy) copy.textContent = 'Get a score and the main reasons behind it.';
     });
 
     document.querySelectorAll('.tw-section-heading h2').forEach((heading) => {
-      if (heading.textContent.includes('No spreadsheet energy')) heading.textContent = 'Three quick steps. One clear result.';
+      if (/No spreadsheet energy|Three quick steps/i.test(heading.textContent || '')) heading.textContent = 'Three quick steps.';
     });
   }
 
   function makeFooterReliable() {
     const footer = document.querySelector('.site-footer');
     if (!footer) return;
-    footer.innerHTML = [
+    const wanted = [
       ['Privacy', 'privacy.html'],
       ['Terms', 'terms.html'],
       ['How TruWorth works', 'decision-support.html'],
       ['Membership', 'plans.html'],
       ['Settings', 'settings.html']
     ].map(([label, href]) => `<a data-tw-footer-link href="${href}">${label}</a>`).join('');
-
-    footer.querySelectorAll('[data-tw-footer-link]').forEach((link) => {
-      link.addEventListener('click', (event) => {
-        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        event.preventDefault();
-        window.location.assign(link.getAttribute('href'));
-      });
-    });
+    if (footer.innerHTML !== wanted) footer.innerHTML = wanted;
   }
 
   function decorateAccount() {
@@ -65,7 +61,7 @@
       const title = intro.querySelector('h1');
       const subtitle = intro.querySelector('div > p:last-child');
       if (title) title.textContent = 'Your account';
-      if (subtitle) subtitle.textContent = 'Your membership, saved decisions and account controls in one place.';
+      if (subtitle) subtitle.textContent = 'Your membership, saved assessments and account controls in one place.';
     }
 
     const plus = isPlus();

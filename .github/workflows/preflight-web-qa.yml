@@ -1,0 +1,130 @@
+name: TruWorth Production Preflight QA
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  web-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run production preflight
+        env:
+          BASE_URL: https://truworth.vercel.app
+        run: |
+          cat > preflight.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import assert from 'node:assert/strict';
+
+          const base = process.env.BASE_URL;
+          const browser = await chromium.launch({ headless: true });
+          const routes = ['/', '/assess.html', '/watchlist.html', '/insights.html', '/account.html', '/plans.html', '/settings.html', '/privacy.html', '/terms.html', '/decision-support.html'];
+          const sizes = [{ width:320, height:800 }, { width:390, height:900 }, { width:430, height:932 }];
+          const banned = /pressure-test|pressure-tested|hurting the case|no ads steering|spreadsheet energy|checkout answer/i;
+          const settle = async (page) => { await page.waitForLoadState('domcontentloaded'); await page.waitForTimeout(2200); };
+
+          for (const viewport of sizes) {
+            const context = await browser.newContext({ viewport });
+            const page = await context.newPage();
+            for (const route of routes) {
+              const response = await page.goto(base + route, { waitUntil:'domcontentloaded', timeout:45000 });
+              assert(response && response.status() < 400, `${route} returned ${response?.status()}`);
+              await settle(page);
+              assert.equal(await page.getByText('We could not start the app.').count(), 0, `${route} hit app startup fallback`);
+              const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+              assert(overflow <= 2, `${route} overflows horizontally by ${overflow}px at ${viewport.width}px`);
+            }
+            await context.close();
+          }
+
+          {
+            const context = await browser.newContext({ viewport:{ width:390, height:900 } });
+            const page = await context.newPage();
+            await page.goto(base + '/', { waitUntil:'domcontentloaded' }); await settle(page);
+            const body = await page.locator('body').innerText();
+            assert(!banned.test(body), `Banned legacy copy visible on Home: ${body.match(banned)?.[0]}`);
+            assert((await page.locator('.tw-home-copy h1').innerText()).toLowerCase().includes('worth'), 'Home hero heading missing');
+            const image = page.locator('.tw-collage-card img');
+            assert.equal(await image.count(), 1, 'Home hero image missing');
+            assert(await image.evaluate(img => img.complete && img.naturalWidth >= 500 && img.naturalHeight >= 300), 'Home hero image did not load at useful resolution');
+            const expected = {'Privacy':'privacy.html','Terms':'terms.html','How TruWorth works':'decision-support.html','Membership':'plans.html','Settings':'settings.html'};
+            for (const [label, href] of Object.entries(expected)) {
+              const link = page.getByRole('link', { name:label, exact:true });
+              assert.equal(await link.count(), 1, `Missing footer link: ${label}`);
+              assert.equal(await link.getAttribute('href'), href, `Wrong href for ${label}`);
+            }
+            await page.getByRole('link', { name:'How TruWorth works', exact:true }).click();
+            await page.waitForURL('**/decision-support.html');
+            assert((await page.locator('h1').first().innerText()).toLowerCase().includes('score'), 'How TruWorth works did not load');
+            await context.close();
+          }
+
+          {
+            const context = await browser.newContext({ viewport:{ width:390, height:900 } });
+            const page = await context.newPage();
+            await page.goto(base + '/', { waitUntil:'domcontentloaded' });
+            await page.evaluate(() => localStorage.setItem('truworth_guest_v1', JSON.stringify({records:[],owned:{},settings:{motion:false}})));
+            await page.reload({ waitUntil:'domcontentloaded' }); await settle(page);
+            const storage = await page.evaluate(() => ({persistent:localStorage.getItem('truworth_guest_v1'),session:sessionStorage.getItem('truworth_guest_v1')}));
+            assert.equal(storage.persistent, null, 'Legacy guest localStorage was not removed');
+            assert(storage.session, 'Guest state was not moved to sessionStorage');
+            await context.close();
+          }
+
+          {
+            const context = await browser.newContext({ viewport:{ width:390, height:900 } });
+            const page = await context.newPage();
+            await page.goto(base + '/assess.html', { waitUntil:'domcontentloaded' }); await settle(page);
+            const symbol = page.locator('.money-input').first().locator('span').first();
+            const priceInput = page.locator('#price');
+            const sb = await symbol.boundingBox(); const pb = await priceInput.boundingBox();
+            assert(sb && pb && sb.x + sb.width <= pb.x + 1, 'Price currency symbol overlaps the input');
+            await page.locator('#item').fill('Preflight Headphones');
+            await page.locator('#price').fill('299.99');
+            await page.locator('#uses').fill('300');
+            await page.locator('#joy').evaluate(el => { el.value='8'; el.dispatchEvent(new Event('input',{bubbles:true})); });
+            await page.locator('button[type="submit"]').click();
+            await page.waitForURL('**/result.html?id=*', { timeout:20000 }); await settle(page);
+            assert(await page.getByText('Preflight Headphones', { exact:true }).count() > 0, 'Guest assessment title missing from result');
+            const score = Number(await page.locator('.tw-score-ring strong').first().innerText());
+            assert(Number.isFinite(score) && score >= 0 && score <= 100, `Invalid result score: ${score}`);
+            const resultBody = await page.locator('body').innerText();
+            assert(!banned.test(resultBody), `Banned legacy copy visible on Result: ${resultBody.match(banned)?.[0]}`);
+            const stored = await page.evaluate(() => ({persistent:localStorage.getItem('truworth_guest_v1'),session:sessionStorage.getItem('truworth_guest_v1')}));
+            assert.equal(stored.persistent, null, 'Guest assessment persisted to localStorage');
+            assert(stored.session?.includes('Preflight Headphones'), 'Guest assessment missing from session state');
+            await page.reload({ waitUntil:'domcontentloaded' }); await settle(page);
+            assert(await page.getByText('Preflight Headphones', { exact:true }).count() > 0, 'Guest result did not survive reload');
+            await page.goto(base + '/watchlist.html', { waitUntil:'domcontentloaded' }); await settle(page);
+            assert(await page.getByText('Preflight Headphones', { exact:true }).count() > 0, 'Guest assessment missing from Library');
+            await context.close();
+          }
+
+          {
+            const context = await browser.newContext({ viewport:{ width:390, height:900 } });
+            const page = await context.newPage();
+            await page.goto(base + '/plans.html', { waitUntil:'domcontentloaded' }); await settle(page);
+            const plans = await page.locator('body').innerText();
+            assert(/3[- ]day/i.test(plans), '3-day trial missing from Membership');
+            assert(/£5\.99/.test(plans), 'Monthly price missing from Membership');
+            assert(/£59\.99/.test(plans), 'Annual price missing from Membership');
+            await page.goto(base + '/decision-support.html', { waitUntil:'domcontentloaded' }); await settle(page);
+            const method = await page.locator('body').innerText();
+            assert(!/Snap\s*&\s*Assess|camera|holiday/i.test(method), 'Removed MVP scope appears on How TruWorth works');
+            assert(/physical consumer products/i.test(method), 'Physical-product MVP scope is not stated');
+            await context.close();
+          }
+
+          await browser.close();
+          console.log('TRUWORTH_PRODUCTION_PREFLIGHT_PASS');
+          EOF
+          node preflight.mjs

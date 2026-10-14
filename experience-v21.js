@@ -1,5 +1,5 @@
 (() => {
-  const heroSrc = 'assets/hero-products.webp?v=20261009i';
+  const heroSrc = 'assets/hero-products.webp?v=20261014a';
   let footerWatcherStarted = false;
   let footerRepairQueued = false;
 

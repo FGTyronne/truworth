@@ -1,0 +1,63 @@
+name: TruWorth Render Auth URL Smoke
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/render-auth-url-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  auth-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify Render auth redirect allow-list
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const assert = (ok, msg) => { if (!ok) throw new Error(msg); };
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+            const base = 'https://truworth-web.onrender.com';
+
+            let response = await page.goto(`${base}/account.html`, { waitUntil: 'networkidle', timeout: 45000 });
+            assert(response && response.ok(), `account.html HTTP ${response?.status()}`);
+            await page.waitForFunction(() => window.__TRUWORTH_RELEASE_READY__ === true, null, { timeout: 30000 });
+            await page.waitForSelector('#loginEmail', { timeout: 20000 });
+            await page.fill('#loginEmail', `truworth-auth-smoke-${Date.now()}@example.invalid`);
+            await page.click('#forgotPassword');
+            await page.waitForFunction(() => {
+              const text = document.querySelector('#loginMessage')?.textContent || '';
+              return /If an account exists for that email/i.test(text) || /redirect|not allowed|invalid/i.test(text);
+            }, null, { timeout: 20000 });
+            const resetMessage = (await page.locator('#loginMessage').textContent()) || '';
+            console.log('PASSWORD_RESET_MESSAGE', resetMessage);
+            assert(/If an account exists for that email/i.test(resetMessage), `Password reset redirect rejected: ${resetMessage}`);
+            assert(!/redirect.*(not allowed|invalid)|not allowed.*redirect/i.test(resetMessage), `Redirect allow-list error: ${resetMessage}`);
+
+            response = await page.goto(`${base}/auth.html`, { waitUntil: 'networkidle', timeout: 45000 });
+            assert(response && response.ok(), `auth.html HTTP ${response?.status()}`);
+            const robots = await page.locator('meta[name="robots"]').getAttribute('content');
+            assert(/noindex/i.test(robots || ''), `auth.html missing noindex: ${robots}`);
+            const body = ((await page.locator('body').innerText()) || '').trim();
+            assert(body.length > 20, 'auth.html rendered blank');
+
+            const authOverride = await page.request.get(`${base}/auth-overrides.js`);
+            assert(authOverride.ok(), `auth-overrides.js HTTP ${authOverride.status()}`);
+            const source = await authOverride.text();
+            assert(source.includes('`${location.origin}/auth.html`'), 'Auth redirect is not origin-relative');
+
+            console.log('TRUWORTH_RENDER_AUTH_URL_SMOKE_PASS');
+            await browser.close();
+          })().catch((err) => { console.error(err); process.exit(1); });
+          NODE

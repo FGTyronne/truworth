@@ -5,5 +5,9 @@ Disallow: /auth.html
 Disallow: /admin-vouchers.html
 Disallow: /result.html
 Disallow: /settings.html
+Disallow: /watchlist.html
+Disallow: /owned.html
+Disallow: /insights.html
+Disallow: /compare.html
 
 Sitemap: https://truworth-web.onrender.com/sitemap.xml

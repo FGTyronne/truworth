@@ -1,0 +1,57 @@
+/* TruWorth help tooltip correction — readable desktop popovers without clipping. */
+.tw17 .help-wrap{position:relative;display:inline-flex;align-items:center;vertical-align:middle;overflow:visible!important}
+.tw17 .help-tooltip{
+  position:absolute!important;
+  z-index:200!important;
+  left:0!important;
+  right:auto!important;
+  top:calc(100% + 10px)!important;
+  width:min(320px,calc(100vw - 48px))!important;
+  max-width:320px!important;
+  min-width:240px!important;
+  box-sizing:border-box!important;
+  padding:12px 14px!important;
+  border-radius:12px!important;
+  background:#1f2430!important;
+  color:#fff!important;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif!important;
+  font-size:13px!important;
+  font-weight:600!important;
+  font-style:normal!important;
+  line-height:1.45!important;
+  letter-spacing:0!important;
+  text-align:left!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  box-shadow:0 10px 26px rgba(16,27,77,.18)!important;
+  transform:none!important;
+}
+.tw17 .help-tooltip:before{
+  content:"";
+  position:absolute;
+  left:13px;
+  top:-6px;
+  width:12px;
+  height:12px;
+  background:#1f2430;
+  transform:rotate(45deg);
+}
+.tw17 .help-wrap:not(:hover):not(:focus):not(:focus-within) .help-tooltip{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+.tw17 .help-wrap:hover .help-tooltip,.tw17 .help-wrap:focus .help-tooltip,.tw17 .help-wrap:focus-within .help-tooltip{visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+
+/* Source drawer previously clipped desktop help text extending beyond its inner cards. */
+.tw17.tw-page-assess .tw-source-drawer[open]{overflow:visible!important}
+.tw17.tw-page-assess .tw-source-drawer[open] .discovery-card{border-radius:0!important}
+.tw17.tw-page-assess .tw-source-drawer[open] .import-card{border-radius:0 0 18px 18px!important}
+
+/* Keep tooltips inside the right half of two-column field grids. */
+@media (min-width:701px){
+  .tw17.tw-page-assess .form-grid.two .field:nth-child(even) .help-tooltip{left:auto!important;right:0!important}
+  .tw17.tw-page-assess .form-grid.two .field:nth-child(even) .help-tooltip:before{left:auto!important;right:13px!important}
+}
+
+/* Mobile uses the dedicated help sheet; hide the desktop bubble there. */
+@media (max-width:700px){
+  .tw17 .help-tooltip{display:none!important}
+}

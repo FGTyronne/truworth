@@ -1,5 +1,5 @@
 Contact: mailto:partnerships@ramellacorporateconsulting.com
 Policy: https://truworth-web.onrender.com/security.html
 Preferred-Languages: en
-Canonical: https://truworth-web.onrender.com/.well-known/security.txt
+Canonical: https://truworth-web.onrender.com/security.txt
 Expires: 2027-10-14T23:59:59Z

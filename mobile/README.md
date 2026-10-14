@@ -1,6 +1,6 @@
 # TruWorth Mobile MVP
 
-This directory contains the native iOS/Android TruWorth MVP built with Expo and React Native. The existing web app remains at the repository root and continues to deploy independently to Vercel.
+This directory contains the native iOS/Android TruWorth MVP built with Expo and React Native. The production web app is served from `https://truworth-web.onrender.com`; Render is the canonical web host. Vercel is legacy infrastructure and must not be treated as the public source of truth for the web product.
 
 ## MVP scope
 
@@ -13,7 +13,7 @@ The assessment model is intentionally limited to **physical consumer products**:
 - The native Supabase auth session is stored with `expo-secure-store` through a chunked storage adapter. It is not written to AsyncStorage.
 - Assessment history, financial context and subscription state are not persisted in ordinary device storage.
 - Unsigned assessment results exist in React state only and disappear when the app process/session is discarded.
-- Non-sensitive static artwork can be fetched from the TruWorth web CDN.
+- Non-sensitive static artwork can be fetched from the canonical TruWorth web host.
 
 ## Run locally
 
@@ -40,4 +40,4 @@ The native app uses the same score version (`truworth-v1.1`) and formula as the 
 
 ## Billing note before public store release
 
-The current native MVP can read existing TruWorth subscription/trial entitlements and manage an active trial through the existing authenticated backend. Membership acquisition currently hands off to the existing TruWorth web membership page for internal MVP testing. App Store and Play Store production billing should be finalised as a dedicated release task rather than embedding a web checkout into a public store build.
+The current native MVP can read existing TruWorth subscription/trial entitlements and manage an active trial through the existing authenticated backend. Membership acquisition currently hands off to the TruWorth web membership page for internal MVP testing. App Store and Play Store production billing should be finalised as a dedicated release task rather than embedding a web checkout into a public store build.

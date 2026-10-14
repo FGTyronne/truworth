@@ -1,0 +1,64 @@
+/* TruWorth Assess layout correction — clean desktop hierarchy, no nested-card clutter. */
+.tw17.tw-page-assess .tw-assess-examples{display:none!important}
+
+@media (min-width:1181px){
+  .tw17.tw-page-assess .main-content{width:100%!important;max-width:1160px!important;margin:0 auto!important;padding-top:8px!important}
+  .tw17.tw-page-assess .page-intro{margin:8px 0 20px!important;padding:0!important;max-width:820px!important}
+  .tw17.tw-page-assess .page-intro .kicker{font-size:11px!important;margin-bottom:6px!important}
+  .tw17.tw-page-assess .page-intro h1{font-size:40px!important;line-height:1.04!important;letter-spacing:-1.4px!important;max-width:760px!important}
+  .tw17.tw-page-assess .page-intro>div>p:last-child{font-size:15px!important;line-height:1.5!important;max-width:700px!important;margin-top:8px!important}
+
+  .tw17.tw-page-assess .assessment-layout{display:grid!important;grid-template-columns:minmax(0,1fr) 286px!important;gap:24px!important;align-items:start!important;width:100%!important}
+  .tw17.tw-page-assess .assessment-form{width:100%!important;min-width:0!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+
+  .tw17.tw-page-assess .tw-source-drawer{margin:0 0 16px!important;border:1px solid var(--tw-line)!important;border-radius:18px!important;background:#fff!important;box-shadow:var(--tw-shadow-soft)!important;overflow:hidden!important}
+  .tw17.tw-page-assess .tw-source-drawer summary{min-height:52px!important;padding:13px 16px!important;font-size:14px!important}
+  .tw17.tw-page-assess .tw-source-drawer summary small{font-size:11px!important}
+  .tw17.tw-page-assess .tw-source-drawer .discovery-card,
+  .tw17.tw-page-assess .tw-source-drawer .import-card{padding:16px!important}
+
+  .tw17.tw-page-assess .form-section{margin:0 0 16px!important;padding:22px!important;background:#fff!important;border:1px solid var(--tw-line)!important;border-radius:20px!important;box-shadow:var(--tw-shadow-soft)!important}
+  .tw17.tw-page-assess .form-section-heading{margin:0 0 18px!important;padding:0 0 14px!important;border-bottom:1px solid var(--tw-line)!important;grid-template-columns:30px minmax(0,1fr) auto!important;gap:10px!important}
+  .tw17.tw-page-assess .form-section-heading>span:not(.tw-step-number){font-size:16px!important;font-weight:850!important}
+  .tw17.tw-page-assess .form-section-heading small{font-size:11px!important;color:var(--tw-muted)!important;white-space:nowrap!important}
+  .tw17.tw-page-assess .tw-step-number{width:28px!important;height:28px!important;display:grid!important;place-items:center!important;border-radius:9px!important;background:var(--tw-green-soft)!important;color:var(--tw-green-dark)!important;font-size:12px!important;font-weight:900!important}
+
+  .tw17.tw-page-assess .form-grid{gap:16px 18px!important}
+  .tw17.tw-page-assess .form-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .tw17.tw-page-assess .field{gap:7px!important;min-width:0!important}
+  .tw17.tw-page-assess .field>span{font-size:13px!important;line-height:1.35!important;font-weight:750!important;color:var(--tw-ink)!important}
+  .tw17.tw-page-assess .field input,
+  .tw17.tw-page-assess .field select,
+  .tw17.tw-page-assess .field textarea{min-height:48px!important;font-size:15px!important;padding:11px 13px!important;border-radius:12px!important}
+  .tw17.tw-page-assess .money-input{min-height:48px!important;border-radius:12px!important}
+  .tw17.tw-page-assess .money-input input{min-height:46px!important}
+  .tw17.tw-page-assess .range-row{min-height:48px!important}
+  .tw17.tw-page-assess .choice-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important;margin-bottom:16px!important}
+  .tw17.tw-page-assess .choice-grid label>span{padding:13px!important;border-radius:14px!important;min-height:74px!important}
+
+  .tw17.tw-page-assess .tw-reflection-tip{margin:4px 0 14px!important;padding:14px 16px!important;border-radius:16px!important}
+  .tw17.tw-page-assess .submit-button{width:100%!important;min-height:52px!important;margin:0!important}
+
+  .tw17.tw-page-assess .assessment-aside{width:100%!important;min-width:0!important}
+  .tw17.tw-page-assess .sticky-card{position:sticky!important;top:22px!important;padding:20px!important;background:#fff!important;border:1px solid var(--tw-line)!important;border-radius:20px!important;box-shadow:var(--tw-shadow-soft)!important}
+  .tw17.tw-page-assess .sticky-card .context-label{font-size:12px!important;color:var(--tw-green-dark)!important;font-weight:850!important}
+  .tw17.tw-page-assess .sticky-card .context-score{font-size:34px!important;line-height:1!important;margin-top:5px!important;color:var(--tw-ink)!important}
+  .tw17.tw-page-assess .sticky-card p{font-size:13px!important;line-height:1.5!important;margin:12px 0!important;color:var(--tw-text)!important}
+  .tw17.tw-page-assess .sticky-card .context-rule{height:1px!important;margin:15px 0!important;background:var(--tw-line)!important}
+}
+
+@media (min-width:1024px) and (max-width:1180px){
+  .tw17.tw-page-assess .main-content{width:100%!important;max-width:860px!important;margin:0 auto!important;padding-top:8px!important}
+  .tw17.tw-page-assess .page-intro{margin:8px 0 18px!important}
+  .tw17.tw-page-assess .page-intro h1{font-size:38px!important}
+  .tw17.tw-page-assess .assessment-layout{display:block!important;width:100%!important}
+  .tw17.tw-page-assess .assessment-form{width:100%!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
+  .tw17.tw-page-assess .form-section{padding:20px!important}
+  .tw17.tw-page-assess .assessment-aside{margin-top:16px!important}
+  .tw17.tw-page-assess .sticky-card{position:static!important;padding:18px!important}
+}
+
+@media (max-width:700px){
+  .tw17.tw-page-assess .tw-assess-examples{display:none!important}
+  .tw17.tw-page-assess .page-intro{margin-bottom:16px!important}
+}

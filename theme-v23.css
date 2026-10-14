@@ -1,0 +1,29 @@
+/* TruWorth wide-screen calibration. Existing mobile/tablet rules remain unchanged. */
+@media (min-width:1024px){
+  .tw17 .app-shell{max-width:1240px;padding-left:32px;padding-right:32px}
+  .tw17 .main-content{padding-top:12px}
+  .tw17 .tw-home-hero{grid-template-columns:minmax(0,.98fr) minmax(420px,.82fr);gap:56px;align-items:center;padding:24px 0 18px;min-height:0}
+  .tw17 .tw-eyebrow{margin-bottom:14px;padding:7px 11px;font-size:12px}
+  .tw17 .tw-home-copy h1{font-size:clamp(52px,4.2vw,64px);line-height:1;letter-spacing:-2.6px;max-width:620px}
+  .tw17 .tw-home-copy>p{max-width:570px;margin-top:17px;font-size:17px;line-height:1.5}
+  .tw17 .tw-home-actions{margin-top:21px}
+  .tw17 .tw-home-actions .tw-big-cta{min-width:205px}
+  .tw17 .tw-home-actions .tw-example-cta{min-width:170px}
+  .tw17 .tw-home-trust{gap:16px;margin-top:15px;font-size:12px}
+  .tw17 .tw-collage-card{min-height:340px;max-height:390px;border-radius:28px;padding:24px}
+  .tw17 .tw-collage-card img{width:min(100%,430px);max-height:330px;object-fit:contain;transform:none}
+  .tw17 .tw-stat-strip{gap:12px;margin:8px 0 28px}
+  .tw17 .tw-stat-strip article{min-height:82px;padding:14px 16px;border-radius:18px}
+  .tw17 .tw-stat-icon{width:38px;height:38px;border-radius:12px;font-size:17px}
+  .tw17 .tw-stat-strip strong{font-size:19px}
+  .tw17 .tw-stat-strip b{font-size:12px}
+  .tw17 .tw-stat-strip small{font-size:11px}
+  .tw17 .tw-home-section{margin-top:30px}
+  .tw17 .buyer-profile-hero{padding:26px}
+  .tw17 .buyer-identities{gap:14px}
+  .tw17 .identity-bubble{padding:18px 20px;min-height:124px}
+}
+@media (min-width:1440px){
+  .tw17 .app-shell{max-width:1280px}
+  .tw17 .tw-home-hero{grid-template-columns:minmax(0,1fr) minmax(430px,.82fr);gap:66px}
+}

@@ -1,3 +1,4 @@
+# one-off workflow trigger
 name: TruWorth Web UX Correction
 on:
   push:
@@ -26,7 +27,6 @@ jobs:
               p.write_text(text.replace(old, new))
               return True
 
-          # The web launch requires an account. Remove legacy guest-first claims from every active renderer.
           replace('experience-v17.js', "['No login', 'Try it first', 'Save your results if you want']", "['Free', 'Your account', 'Keeps your assessments saved']", required=False)
           replace('experience-v17.js', '<div class="tw-home-trust"><span>✓ No account needed</span><span>✓ About 2 minutes</span><span>✓ Clear 0–100 score</span></div>', '<div class="tw-home-trust"><span>✓ Free account</span><span>✓ About 2 minutes</span><span>✓ Clear 0–100 score</span></div>', required=False)
           replace('experience-v17.js', "'Sign in when you want your assessments available across devices.'", "'Create an account or sign in to use TruWorth and keep your assessments saved.'", required=False)
@@ -35,12 +35,8 @@ jobs:
           replace('experience-v21.js', "<span><b>✓</b>No account needed</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>Clear 0–100 score</span>", "<span><b>✓</b>Free account</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>Clear 0–100 score</span>", required=False)
           replace('copy-v19.js', "<span><b>✓</b>No account needed</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>Clear 0–100 score</span>", "<span><b>✓</b>Free account</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>Clear 0–100 score</span>", required=False)
           replace('copy-v19.js', "'Try it first': 'Save your results if you want'", "'Your account': 'Keeps your assessments saved'", required=False)
-
-          # Older home renderer can still execute before later experience layers. Keep it truthful too.
           replace('release-v6.js', '<div class="home-trust"><span>No account needed to try it</span><span>About 2 minutes</span><span>Save later if you want</span></div>', '<div class="home-trust"><span>Free account</span><span>About 2 minutes</span><span>Clear 0–100 score</span></div>', required=False)
           replace('release-v6.js', 'Paste it into the assessor. Sign in only if you want automatic page import and cloud saving.', 'Paste it into the assessor. Your assessment stays with your account.', required=False)
-
-          # Replace internal persona jargon with language a consumer can understand immediately.
           replace('release-v6.js', "const motiveLabel = (m) => m === 'need' ? 'Practical' : m === 'joy' ? 'Joy-led' : m === 'image' ? 'Impulse-led' : 'Exploring';", "const motiveLabel = (m) => m === 'need' ? 'Practical' : m === 'joy' ? 'For enjoyment' : m === 'image' ? 'Impulse/status' : 'Not enough data';")
           replace('release-v6.js', "real: bought.length ? motiveLabel(realMotive) : 'Still learning',", "real: bought.length ? motiveLabel(realMotive) : 'Not enough data',")
           replace('release-v6.js', '<h2>${snapshot.wants} wants. ${snapshot.real} reality.</h2><p>TruWorth is starting to learn the difference between what catches your eye and what you actually buy.</p>', '<h2>What catches your eye vs what you buy</h2><p>TruWorth compares the products you assess with the ones you mark as bought.</p>', required=False)
@@ -56,17 +52,13 @@ jobs:
           replace('release-v6.js', '<h2>Understand your behaviour</h2>', '<h2>See your buying patterns</h2>')
           replace('release-v6.js', 'Unlock your full Buyer Profile', 'Unlock your full buying patterns')
           replace('release-v6.js', 'Building your deeper Buyer Profile…', 'Building your buying patterns…')
-
-          # Native app is Phase 2, but keep shared product language truthful.
           replace('mobile/App.tsx', '✓ No account needed', '✓ Free account', required=False)
 
-          # Make account-required behaviour match the launch copy.
           route_old = "function route() {\n  const routes = {"
           route_new = "function route() {\n  const privatePages = new Set(['assess','result','compare','watchlist','owned','insights','settings']);\n  if (!user && privatePages.has(page())) {\n    sessionStorage.setItem('truworth-return-to', `${location.pathname.split('/').pop() || 'index.html'}${location.search || ''}`);\n    location.href = 'account.html';\n    return;\n  }\n  const routes = {"
           replace('account-v2.js', route_old, route_new)
           replace('account-v2.js', "  await syncGuestRecords();\n  location.href = 'index.html';", "  await syncGuestRecords();\n  const returnTo = sessionStorage.getItem('truworth-return-to') || 'index.html';\n  sessionStorage.removeItem('truworth-return-to');\n  location.href = returnTo;")
 
-          # Desktop calibration: preserve mobile, reduce oversized wide-screen composition.
           Path('theme-v23.css').write_text(r'''/* TruWorth wide-screen calibration. Mobile/tablet rules remain in the existing themes. */
 @media (min-width:1024px){
   .tw17 .app-shell{max-width:1240px;padding-left:32px;padding-right:32px}
@@ -100,11 +92,7 @@ jobs:
           if "theme-v23.css" not in css:
               css += "@import url('theme-v23.css?v=20261014b');\n"
           app_css.write_text(css)
-
-          # Bust cached JS after modifying existing renderer files.
           replace('app.js', "const version='20261014a';", "const version='20261014b';")
-
-          # Remove this one-off workflow before committing the actual product changes.
           Path('.github/workflows/web-ux-fix-once.yml').unlink()
           PY
       - name: Verify removed copy and syntax

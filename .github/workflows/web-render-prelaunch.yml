@@ -1,0 +1,75 @@
+name: TruWorth Render Web Launch Certification
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run Render certification
+        env:
+          BASE_URL: https://truworth-web.onrender.com
+          FUNCTIONS_URL: https://npfdkbqjoxolxxtmprmr.supabase.co/functions/v1
+        run: |
+          cat > render-cert.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import assert from 'node:assert/strict';
+          const base=process.env.BASE_URL;
+          const fnBase=process.env.FUNCTIONS_URL;
+          const browser=await chromium.launch({headless:true});
+          const routes=['/','/assess.html','/plans.html','/decision-support.html','/privacy.html','/terms.html','/should-i-buy-it.html','/cost-per-use-calculator.html','/impulse-buying-checklist.html','/expensive-purchase-checklist.html'];
+          const sizes=[{width:320,height:800},{width:390,height:900},{width:430,height:932}];
+          const settle=async p=>{await p.waitForLoadState('domcontentloaded');await p.waitForTimeout(1500)};
+          for(const viewport of sizes){
+            const context=await browser.newContext({viewport});const page=await context.newPage();
+            for(const route of routes){const r=await page.goto(base+route,{waitUntil:'domcontentloaded',timeout:45000});assert(r&&r.status()<400,`${route} ${r?.status()}`);await settle(page);const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);assert(overflow<=2,`${route} overflows ${overflow}px at ${viewport.width}`);assert.equal(await page.getByText('We could not start the app.').count(),0,`${route} app fallback`)}
+            await context.close();
+          }
+          {
+            const context=await browser.newContext({viewport:{width:390,height:900}});const page=await context.newPage();
+            await page.goto(base+'/',{waitUntil:'domcontentloaded'});await settle(page);
+            assert.equal(await page.locator('link[rel="canonical"][href="https://truworth-web.onrender.com/"]').count(),1,'Home canonical missing');
+            assert.equal(await page.locator('[data-truworth-ad]').count(),0,'Ads rendered before activation');
+            assert.equal(await page.locator('script[src*="pagead2.googlesyndication.com"]').count(),0,'AdSense loaded before consent/config');
+            await context.close();
+          }
+          {
+            const context=await browser.newContext({viewport:{width:390,height:900}});const page=await context.newPage();
+            await page.goto(base+'/cost-per-use-calculator.html',{waitUntil:'domcontentloaded'});
+            await page.locator('#purchasePrice').fill('300');await page.locator('#extraCosts').fill('60');await page.locator('#expectedUses').fill('180');await page.locator('#calculate').click();
+            const result=await page.locator('#calcResult').innerText();assert(result.includes('£2.00 per use'),`Calculator wrong: ${result}`);
+            await context.close();
+          }
+          {
+            const context=await browser.newContext({viewport:{width:390,height:900}});const page=await context.newPage();
+            await page.goto(base+'/assess.html',{waitUntil:'domcontentloaded'});await settle(page);
+            await page.locator('#item').fill('Render Test Headphones');await page.locator('#price').fill('299.99');await page.locator('#uses').fill('300');
+            await page.locator('#joy').evaluate(el=>{el.value='8';el.dispatchEvent(new Event('input',{bubbles:true}))});
+            await page.locator('button[type="submit"]').click();await page.waitForURL('**/result.html?id=*',{timeout:20000});await settle(page);
+            assert(await page.getByText('Render Test Headphones',{exact:true}).count()>0,'Result title missing');
+            const score=Number(await page.locator('.tw-score-ring strong').first().innerText());assert(Number.isFinite(score)&&score>=0&&score<=100,`Invalid score ${score}`);
+            assert.equal(await page.locator('[data-truworth-ad]').count(),0,'Ads rendered on result before activation');
+            await page.reload({waitUntil:'domcontentloaded'});await settle(page);assert(await page.getByText('Render Test Headphones',{exact:true}).count()>0,'Guest result did not survive reload');
+            await page.goto(base+'/watchlist.html',{waitUntil:'domcontentloaded'});await settle(page);assert(await page.getByText('Render Test Headphones',{exact:true}).count()>0,'Guest item missing from Library');
+            await context.close();
+          }
+          for(const path of ['/robots.txt','/sitemap.xml']){const r=await fetch(base+path);assert(r.ok,`${path} ${r.status}`);const t=await r.text();assert(t.includes('truworth-web.onrender.com'),`${path} missing launch host`)}
+          for(const slug of ['stripe-checkout','stripe-portal','trial-action','delete-account','buyer-insights','purchase-vote']){
+            const r=await fetch(`${fnBase}/${slug}`,{method:'OPTIONS',headers:{Origin:base,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type,apikey'}});
+            assert([200,204].includes(r.status),`${slug} preflight ${r.status}`);
+            assert.equal(r.headers.get('access-control-allow-origin'),base,`${slug} wrong CORS origin`);
+          }
+          await browser.close();console.log('TRUWORTH_RENDER_WEB_CERT_PASS');
+          EOF
+          node render-cert.mjs

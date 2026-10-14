@@ -2,6 +2,8 @@
 @media (min-width:1024px){
   .tw17 .app-shell{width:min(1280px,100%);max-width:1280px;padding-left:32px;padding-right:32px}
   .tw17 .main-content{padding-top:10px}
+
+  /* Home: use the desktop canvas rather than stretching the mobile composition. */
   .tw17 .tw-home-hero{grid-template-columns:minmax(0,1.08fr) minmax(400px,.82fr);gap:48px;align-items:center;padding:20px 0 14px;min-height:0}
   .tw17 .tw-eyebrow{margin-bottom:12px;padding:7px 11px;font-size:12px}
   .tw17 .tw-home-copy h1{font-size:clamp(50px,3.9vw,60px);line-height:1;letter-spacing:-2.4px;max-width:670px}
@@ -20,6 +22,21 @@
   .tw17 .tw-stat-strip b{font-size:12px}
   .tw17 .tw-stat-strip small{font-size:11px}
   .tw17 .tw-home-section{margin-top:28px}
+
+  /* Assessment: the form is the primary task. Keep it broad and let the score card be the sidebar. */
+  .tw17.tw-page-assess .main-content{width:100%;max-width:1180px;margin:0 auto;padding-top:8px}
+  .tw17.tw-page-assess .page-intro{max-width:820px;margin:10px 0 22px}
+  .tw17.tw-page-assess .page-intro h1{font-size:clamp(36px,3.2vw,46px);max-width:760px}
+  .tw17.tw-page-assess .page-intro>div>p:last-child{max-width:720px;font-size:15px}
+  .tw17.tw-page-assess .tw-assess-examples{width:100%;margin-bottom:18px;padding:15px 20px}
+  .tw17.tw-page-assess .tw-assess-examples img{width:150px;height:88px}
+  .tw17.tw-page-assess .assessment-layout{grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:start;width:100%}
+  .tw17.tw-page-assess .assessment-form{min-width:0;width:100%;padding:22px;border-radius:24px}
+  .tw17.tw-page-assess .form-section{padding:20px;margin-bottom:16px}
+  .tw17.tw-page-assess .assessment-aside{min-width:0;width:100%}
+  .tw17.tw-page-assess .sticky-card{top:24px;padding:22px}
+
+  /* Buying-pattern cards should read as compact information, not oversized personas. */
   .tw17 .buyer-profile-hero{padding:24px}
   .tw17 .buyer-identities{gap:12px}
   .tw17 .identity-bubble{padding:17px 18px;min-height:116px}
@@ -28,4 +45,6 @@
   .tw17 .app-shell{width:min(1360px,100%);max-width:1360px}
   .tw17 .tw-home-hero{grid-template-columns:minmax(0,1.12fr) minmax(430px,.78fr);gap:56px}
   .tw17 .tw-home-copy h1{font-size:60px;max-width:720px}
+  .tw17.tw-page-assess .main-content{max-width:1220px}
+  .tw17.tw-page-assess .assessment-layout{grid-template-columns:minmax(0,1fr) 310px;gap:32px}
 }

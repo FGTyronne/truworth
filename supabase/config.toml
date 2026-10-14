@@ -7,6 +7,9 @@ verify_jwt = true
 [functions.purchase-vote]
 verify_jwt = true
 
+[functions.guest-assessment-quota]
+verify_jwt = false
+
 [functions.stripe-checkout]
 verify_jwt = true
 

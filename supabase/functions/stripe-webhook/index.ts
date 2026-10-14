@@ -6,7 +6,7 @@ const TEMPLATE_TRIAL = 'truworth-trial-started';
 const TEMPLATE_CANCELLATION = 'truworth-cancellation-confirmed';
 const TEMPLATE_PAYMENT_FAILED = 'truworth-payment-failed';
 const FROM = 'TruWorth <notifications@truworth.ramellacorporateconsulting.com>';
-const ACCOUNT_URL = 'https://truworth.vercel.app/account.html';
+const ACCOUNT_URL = 'https://truworth-web.onrender.com/account.html';
 
 function adminKey() { try { const keys = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') || '{}'); if (keys?.default) return keys.default; } catch {} return Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''; }
 const hex = (b: ArrayBuffer) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
@@ -38,63 +38,29 @@ Deno.serve(async (req: Request) => {
   const { error: reserve } = await admin.from('stripe_webhook_events').insert({ event_id: event.id, event_type: event.type });
   if (reserve?.code === '23505') return new Response('ok', { status: 200 });
   if (reserve) return new Response('Ledger unavailable', { status: 500 });
-
   try {
-    const obj = event.data?.object || {};
-    const previous = event.data?.previous_attributes || {};
-    let sub: any = null, userId: string | null = null, invoice: any = null;
+    const obj = event.data?.object || {}; const previous = event.data?.previous_attributes || {}; let sub: any = null, userId: string | null = null, invoice: any = null;
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') { userId = obj.metadata?.supabase_user_id || obj.client_reference_id || null; const sid = typeof obj.subscription === 'string' ? obj.subscription : obj.subscription?.id; if (sid) sub = await stripeGet(`subscriptions/${encodeURIComponent(sid)}`, stripeSecret); }
     else if (event.type.startsWith('customer.subscription.')) sub = obj;
     else if (event.type === 'invoice.payment_failed' || event.type === 'invoice.paid') { invoice = obj; const sid = invoiceSubscriptionId(obj); if (sid) sub = await stripeGet(`subscriptions/${encodeURIComponent(sid)}`, stripeSecret); }
     else return new Response('ok', { status: 200 });
     if (!sub) return new Response('ok', { status: 200 });
-
     userId = userId || sub.metadata?.supabase_user_id || null;
     if (!userId) { const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id; const { data: row } = await admin.from('subscriptions').select('user_id').or(`provider_subscription_id.eq.${sub.id},provider_customer_id.eq.${customerId}`).maybeSingle(); userId = row?.user_id || null; }
     if (!userId) throw new Error('No TruWorth user mapping');
     const { data: userCheck, error: userCheckError } = await admin.auth.admin.getUserById(userId);
     if (userCheckError) { if ((userCheckError as any)?.status === 404) return new Response('ok', { status: 200 }); throw userCheckError; }
     if (!userCheck?.user) return new Response('ok', { status: 200 });
-
-    const item = sub.items?.data?.[0];
-    const priceObj = typeof item?.price === 'object' ? item.price : null;
-    const priceId = typeof item?.price === 'string' ? item.price : priceObj?.id || null;
-    const interval = priceObj?.recurring?.interval || sub.metadata?.truworth_plan || null;
-    const rawStatus = String(sub.status || 'inactive');
-    const active = ['active', 'trialing'].includes(rawStatus);
-    const trialStartIso = sub.trial_start ? new Date(Number(sub.trial_start) * 1000).toISOString() : null;
-    const trialEndIso = sub.trial_end ? new Date(Number(sub.trial_end) * 1000).toISOString() : null;
-    const period = item?.current_period_end || sub.current_period_end || null;
-    const periodIso = period ? new Date(Number(period) * 1000).toISOString() : null;
+    const item = sub.items?.data?.[0]; const priceObj = typeof item?.price === 'object' ? item.price : null; const priceId = typeof item?.price === 'string' ? item.price : priceObj?.id || null; const interval = priceObj?.recurring?.interval || sub.metadata?.truworth_plan || null; const rawStatus = String(sub.status || 'inactive'); const active = ['active', 'trialing'].includes(rawStatus); const trialStartIso = sub.trial_start ? new Date(Number(sub.trial_start) * 1000).toISOString() : null; const trialEndIso = sub.trial_end ? new Date(Number(sub.trial_end) * 1000).toISOString() : null; const period = item?.current_period_end || sub.current_period_end || null; const periodIso = period ? new Date(Number(period) * 1000).toISOString() : null;
     const payload = { user_id: userId, tier: active ? 'plus' : 'free', status: dbStatus(rawStatus), provider: 'stripe', provider_customer_id: typeof sub.customer === 'string' ? sub.customer : sub.customer?.id || null, provider_subscription_id: sub.id, provider_price_id: priceId, plan_interval: interval, cancel_at_period_end: Boolean(sub.cancel_at_period_end), current_period_end: periodIso, trial_started_at: trialStartIso, trial_end: trialEndIso, updated_at: new Date().toISOString() };
-    const { error: upsertError } = await admin.from('subscriptions').upsert(payload, { onConflict: 'user_id' });
-    if (upsertError) throw upsertError;
-
+    const { error: upsertError } = await admin.from('subscriptions').upsert(payload, { onConflict: 'user_id' }); if (upsertError) throw upsertError;
     if (resendKey && userCheck.user.email) {
-      let price: any = priceObj;
-      if (!price && priceId) price = await stripeGet(`prices/${encodeURIComponent(priceId)}`, stripeSecret);
-      const amount = Number(price?.unit_amount ?? 0), currency = String(price?.currency || 'gbp'), billingInterval = String(price?.recurring?.interval || interval || 'month');
-      const planName = billingInterval === 'year' ? 'TruWorth+ Annual' : 'TruWorth+ Monthly';
-      const planPrice = `${formatMoney(amount, currency)} / ${billingInterval === 'year' ? 'year' : 'month'}`;
-      const startEvent = event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded' || event.type === 'customer.subscription.created';
-      if (rawStatus === 'trialing' && startEvent) {
-        await sendOnce(admin,resendKey,userId,'trial_started',String(sub.id),userCheck.user.email,TEMPLATE_TRIAL,{PLAN_NAME:planName,PLAN_PRICE:planPrice,TRIAL_END_DATE:trialEndIso?formatDate(trialEndIso):'See your account',ACCOUNT_URL},`truworth/trial/${sub.id}`,{subscription_id:sub.id});
-      } else if (rawStatus === 'active' && (startEvent || (event.type === 'customer.subscription.updated' && previous?.status === 'trialing'))) {
-        await sendOnce(admin,resendKey,userId,'plus_activated',String(sub.id),userCheck.user.email,TEMPLATE_PLUS,{PLAN_NAME:planName,AMOUNT:formatMoney(amount,currency),NEXT_BILLING_DATE:periodIso?formatDate(periodIso):'See your account',ACCOUNT_URL},`truworth/plus/${sub.id}`,{subscription_id:sub.id});
-      }
-      if (event.type === 'customer.subscription.updated' && Boolean(sub.cancel_at_period_end) && previous?.cancel_at_period_end === false) {
-        const end = trialEndIso || periodIso || new Date().toISOString();
-        await sendOnce(admin,resendKey,userId,'cancellation_confirmed',`${sub.id}:${end}`,userCheck.user.email,TEMPLATE_CANCELLATION,{PLAN_NAME:planName,ACCESS_END_DATE:formatDate(end),ACCOUNT_URL},`truworth/cancel/${sub.id}/${end}`,{subscription_id:sub.id});
-      }
-      if (event.type === 'invoice.payment_failed' && invoice) {
-        const invoiceId = String(invoice.id || event.id); const amountDue = Number(invoice.amount_due ?? 0);
-        await sendOnce(admin,resendKey,userId,'payment_failed',invoiceId,userCheck.user.email,TEMPLATE_PAYMENT_FAILED,{AMOUNT:formatMoney(amountDue,currency),PLAN_NAME:planName,MANAGE_URL:ACCOUNT_URL},`truworth/payment-failed/${invoiceId}`,{invoice_id:invoiceId,subscription_id:sub.id});
-      }
+      let price: any = priceObj; if (!price && priceId) price = await stripeGet(`prices/${encodeURIComponent(priceId)}`, stripeSecret); const amount = Number(price?.unit_amount ?? 0), currency = String(price?.currency || 'gbp'), billingInterval = String(price?.recurring?.interval || interval || 'month'); const planName = billingInterval === 'year' ? 'TruWorth+ Annual' : 'TruWorth+ Monthly'; const planPrice = `${formatMoney(amount, currency)} / ${billingInterval === 'year' ? 'year' : 'month'}`; const startEvent = event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded' || event.type === 'customer.subscription.created';
+      if (rawStatus === 'trialing' && startEvent) await sendOnce(admin,resendKey,userId,'trial_started',String(sub.id),userCheck.user.email,TEMPLATE_TRIAL,{PLAN_NAME:planName,PLAN_PRICE:planPrice,TRIAL_END_DATE:trialEndIso?formatDate(trialEndIso):'See your account',ACCOUNT_URL},`truworth/trial/${sub.id}`,{subscription_id:sub.id});
+      else if (rawStatus === 'active' && (startEvent || (event.type === 'customer.subscription.updated' && previous?.status === 'trialing'))) await sendOnce(admin,resendKey,userId,'plus_activated',String(sub.id),userCheck.user.email,TEMPLATE_PLUS,{PLAN_NAME:planName,AMOUNT:formatMoney(amount,currency),NEXT_BILLING_DATE:periodIso?formatDate(periodIso):'See your account',ACCOUNT_URL},`truworth/plus/${sub.id}`,{subscription_id:sub.id});
+      if (event.type === 'customer.subscription.updated' && Boolean(sub.cancel_at_period_end) && previous?.cancel_at_period_end === false) { const end = trialEndIso || periodIso || new Date().toISOString(); await sendOnce(admin,resendKey,userId,'cancellation_confirmed',`${sub.id}:${end}`,userCheck.user.email,TEMPLATE_CANCELLATION,{PLAN_NAME:planName,ACCESS_END_DATE:formatDate(end),ACCOUNT_URL},`truworth/cancel/${sub.id}/${end}`,{subscription_id:sub.id}); }
+      if (event.type === 'invoice.payment_failed' && invoice) { const invoiceId = String(invoice.id || event.id); const amountDue = Number(invoice.amount_due ?? 0); await sendOnce(admin,resendKey,userId,'payment_failed',invoiceId,userCheck.user.email,TEMPLATE_PAYMENT_FAILED,{AMOUNT:formatMoney(amountDue,currency),PLAN_NAME:planName,MANAGE_URL:ACCOUNT_URL},`truworth/payment-failed/${invoiceId}`,{invoice_id:invoiceId,subscription_id:sub.id}); }
     }
     return new Response('ok', { status: 200 });
-  } catch (error) {
-    console.error('Stripe webhook processing failed', event?.type, event?.id, error);
-    await admin.from('stripe_webhook_events').delete().eq('event_id', event.id);
-    return new Response('Webhook processing failed', { status: 500 });
-  }
+  } catch (error) { console.error('Stripe webhook processing failed', event?.type, event?.id, error); await admin.from('stripe_webhook_events').delete().eq('event_id', event.id); return new Response('Webhook processing failed', { status: 500 }); }
 });

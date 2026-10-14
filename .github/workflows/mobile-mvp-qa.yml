@@ -65,11 +65,11 @@ jobs:
               };
             });
             console.log('DESKTOP_METRICS', JSON.stringify(desktop));
-            assert(desktop.h1Font > 0 && desktop.h1Font <= 65, `Headline font too large: ${desktop.h1Font}`);
-            assert(desktop.h1 && desktop.h1.width <= 650, `Headline block too wide: ${desktop.h1?.width}`);
-            assert(desktop.card && desktop.card.height <= 400, `Hero artwork card too tall: ${desktop.card?.height}`);
-            assert(desktop.hero && desktop.hero.height <= 470, `Hero section too tall: ${desktop.hero?.height}`);
-            assert(desktop.stat && desktop.stat.height <= 105, `Proof card too tall: ${desktop.stat?.height}`);
+            assert(desktop.h1Font > 0 && desktop.h1Font <= 60, `Headline font too large: ${desktop.h1Font}`);
+            assert(desktop.h1 && desktop.h1.width <= 730, `Headline block too wide: ${desktop.h1?.width}`);
+            assert(desktop.card && desktop.card.height <= 370, `Hero artwork card too tall: ${desktop.card?.height}`);
+            assert(desktop.hero && desktop.hero.height <= 430, `Hero section too tall: ${desktop.hero?.height}`);
+            assert(desktop.stat && desktop.stat.height <= 95, `Proof card too tall: ${desktop.stat?.height}`);
             assert(desktop.overflow <= 2, `Desktop horizontal overflow: ${desktop.overflow}`);
             assert(/Free account/i.test(desktop.trust), `Trust strip missing Free account: ${desktop.trust}`);
             assert(!/No account needed/i.test(desktop.trust), `Legacy account copy remains: ${desktop.trust}`);

@@ -44,7 +44,7 @@
 
   function repairFooter(){
     const footer=document.querySelector('.site-footer'); if(!footer)return;
-    footer.innerHTML=`<a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="cookies.html">Cookies</a><a href="security.html">Security</a><a href="decision-support.html">How TruWorth works</a><a href="member-benefits.html">Member Benefits</a><a href="plans.html">Membership</a><a href="settings.html">Settings</a><button class="tw-cookie-link" type="button" data-tw-cookie-settings>Cookie settings</button>`;
+    footer.innerHTML=`<a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="cookies.html">Cookies</a><a href="security.html">Security</a><a href="decision-support.html">How TruWorth works</a><a href="member-benefits.html">Member Benefits</a><a href="partner-with-truworth.html">Partner with us</a><a href="plans.html">Membership</a><a href="settings.html">Settings</a><button class="tw-cookie-link" type="button" data-tw-cookie-settings>Cookie settings</button>`;
   }
 
   function enhanceSettings(){

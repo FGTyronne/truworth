@@ -16,7 +16,7 @@
 
     const trust = document.querySelector('.tw-home-trust');
     if (trust) {
-      const wanted = '<span><b>✓</b>No account needed</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>Clear 0–100 score</span>';
+      const wanted = '<span><b>✓</b>Free account</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>Clear 0–100 score</span>';
       if (trust.innerHTML !== wanted) trust.innerHTML = wanted;
     }
 
@@ -30,7 +30,7 @@
         'Average score': 'Across your saved assessments',
         'Typical check': 'Quick to complete',
         'Clear score': 'Easy to compare',
-        'Try it first': 'Save your results if you want'
+        'Your account': 'Keeps your assessments saved'
       }[label];
       if (copy) setText(note, copy);
     });

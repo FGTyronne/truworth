@@ -34,7 +34,7 @@
       return [
         ['≈2 min', 'Typical check', 'Quick to complete'],
         ['0–100', 'Clear score', 'Easy to compare'],
-        ['No login', 'Try it first', 'Save your results if you want']
+        ['Saved', 'Your account', 'Keep your assessments in one place']
       ];
     }
     return [
@@ -66,7 +66,7 @@
             <a class="primary-button tw-big-cta" href="assess.html">Start assessment <span aria-hidden="true">→</span></a>
             <a class="secondary-button tw-example-cta" href="assess.html?q=headphones">Browse an example</a>
           </div>
-          <div class="tw-home-trust"><span>✓ No account needed</span><span>✓ About 2 minutes</span><span>✓ Clear 0–100 score</span></div>
+          <div class="tw-home-trust"><span>✓ Saved to your account</span><span>✓ About 2 minutes</span><span>✓ Clear 0–100 score</span></div>
         </div>
         <div class="tw-collage-card">
           <span class="tw-sticker tw-sticker-a">Useful?</span>
@@ -200,7 +200,7 @@
   function enhanceAccount() {
     if (page() !== 'account') return;
     markPage();
-    setIntro('Account', user ? 'Your TruWorth membership, preferences and private financial context.' : 'Sign in when you want your assessments available across devices.');
+    setIntro('Account', user ? 'Your TruWorth membership, preferences and private financial context.' : 'Create an account or sign in to use TruWorth and keep your assessments saved.');
   }
 
   function enhanceGeneric() {

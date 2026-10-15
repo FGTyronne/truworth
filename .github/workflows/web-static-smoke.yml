@@ -34,6 +34,8 @@ jobs:
           test -f dist-web/.well-known/security.txt
           test -f dist-web/member-benefits.html
           test -f dist-web/partner-with-truworth.html
+          test -f dist-web/release.txt
+          test "$(cat dist-web/release.txt)" = "$GITHUB_SHA"
       - name: Run static launch checks
         run: node scripts/web-static-smoke.mjs
       - name: Run public SEO checks

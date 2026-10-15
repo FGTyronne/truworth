@@ -61,3 +61,5 @@ jobs:
         run: node scripts/commercial-boundary-smoke.mjs
       - name: Run admin boundary checks
         run: node scripts/admin-boundary-smoke.mjs
+      - name: Run access and commercial contract checks
+        run: node scripts/access-commercial-contract-smoke.mjs

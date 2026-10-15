@@ -51,7 +51,7 @@ async function markPurchased(record) {
 
 function savedPage() {
   const ranked = sortedRecords();
-  const limitText = user && subscription.tier === 'free' ? `${records.length} of 10 saved on Free` : user ? 'Unlimited saved products' : `${records.length} saved on this device`;
+  const limitText = user && subscription.tier === 'free' ? `${records.length} of 5 saved on Free` : user ? 'Unlimited saved products' : `${records.length} saved on this device`;
   layout('Saved products', 'Search your product history and see your strongest matches first.', `
     <section class="library-toolbar"><label class="search-field">${icon('search')}<input id="librarySearch" type="search" placeholder="Search product, brand, retailer or link" autocomplete="off"></label><select id="librarySort" aria-label="Sort saved products"><option value="score">Best score</option><option value="newest">Newest</option><option value="price-low">Lowest price</option></select></section>
     <div class="library-meta"><span id="libraryCount">${records.length} products</span><span>${limitText}</span></div>

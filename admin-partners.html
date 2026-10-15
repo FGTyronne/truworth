@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="TruWorth partner enquiry administration.">
+  <title>Partner enquiries | TruWorth</title>
+  <link rel="stylesheet" href="app.css?v=20261015f">
+  <style>
+    body{background:#fcf9f4;color:#101b4d;font-family:Inter,system-ui,sans-serif}.partner-admin-shell{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:28px 0 60px}.partner-admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}.partner-admin-brand{font-size:1.35rem;font-weight:900;color:#101b4d;text-decoration:none}.partner-admin-back{color:#101b4d;font-weight:800}.partner-admin-panel{background:#fff;border:1px solid rgba(16,27,77,.1);border-radius:24px;padding:22px}.partner-admin-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}.partner-admin-filter{display:flex;gap:8px;flex-wrap:wrap}.partner-admin-filter button{border:1px solid rgba(16,27,77,.14);background:#fff;border-radius:999px;padding:8px 11px;font:inherit;cursor:pointer}.partner-admin-filter button.active{background:#101b4d;color:#fff}.partner-admin-list{display:grid;gap:12px}.partner-enquiry{border:1px solid rgba(16,27,77,.1);border-radius:18px;padding:18px;display:grid;gap:12px}.partner-enquiry-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.partner-enquiry h2{font-size:1rem;margin:0}.partner-enquiry-meta{color:#68708a;font-size:.82rem}.partner-enquiry-message{white-space:pre-wrap;line-height:1.5;color:#343b56}.partner-enquiry-actions{display:flex;gap:8px;flex-wrap:wrap}.partner-enquiry-actions select{border:1px solid rgba(16,27,77,.16);border-radius:12px;padding:9px 11px;background:#fff}.partner-enquiry a{color:#101b4d}.status-pill{font-size:.72rem;font-weight:800;border-radius:999px;padding:6px 9px;background:#f0f1ef}.partner-admin-loading,.partner-admin-empty{padding:32px;text-align:center;color:#68708a}.partner-admin-error{color:#a3261c}@media(max-width:680px){.partner-enquiry-head{display:grid}}
+  </style>
+</head>
+<body>
+  <main class="partner-admin-shell">
+    <header class="partner-admin-header"><a class="partner-admin-brand" href="account.html">TruWorth</a><a class="partner-admin-back" href="account.html">Back to account</a></header>
+    <section id="partnerAdminApp" aria-live="polite"><div class="partner-admin-loading">Checking access…</div></section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
+  <script defer src="admin-partners.js?v=20261015a"></script>
+</body>
+</html>

@@ -197,7 +197,7 @@ async function saveAssessment(event) {
     location.href = `result.html?id=${encodeURIComponent(record.id)}`;
   } catch (error) {
     console.error(error);
-    errorBox.textContent = String(error.message || '').includes('storage limit') ? 'You have reached the 10-product Free limit. Remove a saved item or upgrade to TruWorth+.' : (error.message || 'We could not save this assessment.');
+    errorBox.textContent = String(error.message || '').includes('storage limit') ? 'You have reached the 5-product Free limit. Remove a saved item or upgrade to TruWorth+.' : (error.message || 'We could not save this assessment.');
     button.disabled = false;
   }
 }

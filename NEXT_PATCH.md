@@ -1,11 +1,17 @@
-# TruWorth next patch staging
+# TruWorth historical patch note
 
-This commit is intentionally not attached to main yet. It stages the next bundled production patch without triggering a Vercel deployment.
+This file records work that has already been merged into `main`. It is not a current release gate or staging branch.
 
-Included so far:
-- Find a product flow that hands the query to Google Search and brings the chosen page back into TruWorth via URL import.
+Implemented:
+- Product discovery flow that hands a query to Google Search and brings the chosen product page back into TruWorth via URL import.
 - Product terminology across the assessor.
-- Accessible contextual help stars for ambiguous assessment inputs, usable by hover, keyboard focus and tap.
-- Concrete examples for lifetime costs, expected uses, setup/upkeep hours, post-novelty enjoyment, minutes saved per use, value of time and existing alternatives.
+- Accessible contextual help for ambiguous assessment inputs, usable by hover, keyboard focus and tap.
+- Concrete examples for lifetime costs, expected uses, setup/upkeep effort, post-novelty enjoyment, minutes saved per use, value of time and existing alternatives.
 
-Google note: unrestricted Custom Search JSON API access is no longer available to new customers, so this stage uses a zero-cost Google search handoff rather than pretending a deprecated public-web API is available. The UI can later be connected to a licensed search-results provider without changing the assessment flow.
+Current deployment model:
+- GitHub `main` is the source of truth.
+- Render is the canonical production web host.
+- The former Vercel deployment exists only for permanent redirects to Render during migration.
+
+Search integration note:
+The current discovery flow deliberately uses a zero-cost Google search handoff rather than relying on an unrestricted public-web search API. A licensed search-results provider can replace that handoff later without changing the assessment model.

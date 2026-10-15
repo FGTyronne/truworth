@@ -50,6 +50,19 @@ for (const file of privatePages) {
   }
 }
 
+if (exists('account.html')) {
+  const accountHtml = read('account.html');
+  if (!/src=["']auth-overrides\.js(?:\?[^"']*)?["']/i.test(accountHtml)) fail('account.html: auth-overrides.js safety layer is not loaded');
+}
+if (exists('account-v2.js')) {
+  const accountSource = read('account-v2.js');
+  if (!/emailRedirectTo:\s*`\$\{location\.origin\}\/auth\.html`/i.test(accountSource)) fail('account-v2.js: signup does not target the hardened auth callback');
+  if (!/resetPasswordForEmail\([\s\S]*?redirectTo:\s*`\$\{location\.origin\}\/auth\.html`/i.test(accountSource)) fail('account-v2.js: password reset does not target the hardened auth callback');
+}
+if (exists('auth-overrides.js') && !/AUTH_REDIRECT\s*=\s*`\$\{location\.origin\}\/auth\.html`/i.test(read('auth-overrides.js'))) {
+  fail('auth-overrides.js: callback target is not /auth.html');
+}
+
 if (exists('app.css')) {
   const css = read('app.css');
   for (const match of css.matchAll(/@import\s+url\(["']?([^"')]+)["']?\)/gi)) {

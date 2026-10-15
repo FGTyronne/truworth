@@ -5,7 +5,7 @@ rm -rf dist-web
 mkdir -p dist-web/.well-known
 
 find . -maxdepth 1 -type f \
-  \( -name '*.html' -o -name '*.js' -o -name '*.css' -o -name '*.txt' -o -name '*.xml' -o -name '*.webmanifest' \) \
+  \( -name '*.html' -o -name '*.js' -o -name '*.css' -o -name '*.txt' -o -name '*.xml' -o -name '*.webmanifest' -o -name '*.svg' \) \
   -exec cp {} dist-web/ \;
 
 cp -R assets dist-web/assets

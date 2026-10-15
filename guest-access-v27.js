@@ -202,8 +202,12 @@
       if (error) throw error;
     }
 
+    records = [];
+    purchases = {};
     local = { records: [], owned: {}, settings: local.settings || { motion: true } };
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(local));
+    try { sessionStorage.setItem(LOCAL_KEY, JSON.stringify(local)); } catch {}
+    try { localStorage.removeItem(LOCAL_KEY); } catch {}
+    try { sessionStorage.removeItem(TRANSIENT_KEY); } catch {}
   };
 
   const baseAssessPage = assessPage;

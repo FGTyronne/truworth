@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 const APP='https://truworth-web.onrender.com';
-const allowedOrigins=new Set([APP,'https://truworth.vercel.app','https://www.truworth.vercel.app','http://localhost:3000','http://127.0.0.1:3000']);
+const allowedOrigins=new Set([APP,'http://localhost:3000','http://127.0.0.1:3000']);
 const cors=(req:Request)=>{const origin=req.headers.get('origin')||'';return{'Access-Control-Allow-Origin':allowedOrigins.has(origin)?origin:APP,'Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin'}};
 const json=(req:Request,body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors(req),'Content-Type':'application/json','Cache-Control':'no-store'}});
 const currencyCode=(v:unknown)=>/^[A-Z]{3}$/i.test(String(v||''))?String(v).toUpperCase():null;

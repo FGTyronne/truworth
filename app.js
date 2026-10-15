@@ -1,5 +1,5 @@
 (async()=>{
-  const version='20261015a';
+  const version='20261015b';
   const files=[
     'core-v2.js',
     'boot-gate.js',
@@ -30,7 +30,8 @@
     'consent-route-v25.js',
     'adspace-v26.js',
     'guest-access-v27.js',
-    'help-v28.js'
+    'help-v28.js',
+    'navigation-v29.js'
   ];
   for(const file of files){
     await new Promise((resolve,reject)=>{

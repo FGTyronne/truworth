@@ -9,6 +9,7 @@
     '<a href="/decision-support.html">How TruWorth works</a>',
     '<button class="tw-footer-nav" type="button" data-tw-footer-href="/member-benefits.html">Member Benefits</button>',
     '<button class="tw-footer-nav" type="button" data-tw-footer-href="/partner-with-truworth.html">Partner with us</button>',
+    '<a href="/commercial-disclosure.html">Commercial disclosure</a>',
     '<a href="/plans.html">Membership</a>',
     '<a href="/settings.html">Settings</a>',
     '<button class="tw-cookie-link" type="button" data-tw-cookie-settings>Cookie settings</button>'
@@ -35,10 +36,10 @@
 
     const anchors = [...footer.querySelectorAll('a')];
     const anchorHrefs = anchors.map((a) => a.getAttribute('href'));
-    const baseFiveStable = anchors.length === 5
-      && anchorHrefs.some((x) => /privacy\.html$/.test(x || ''))
+    const baseStable = anchorHrefs.some((x) => /privacy\.html$/.test(x || ''))
       && anchorHrefs.some((x) => /terms\.html$/.test(x || ''))
       && anchorHrefs.some((x) => /decision-support\.html$/.test(x || ''))
+      && anchorHrefs.some((x) => /commercial-disclosure\.html$/.test(x || ''))
       && anchorHrefs.some((x) => /plans\.html$/.test(x || ''))
       && anchorHrefs.some((x) => /settings\.html$/.test(x || ''));
 
@@ -48,9 +49,9 @@
       && footer.querySelector('[data-tw-footer-href="/partner-with-truworth.html"]')
       && footer.querySelector('[data-tw-cookie-settings]');
 
-    if (!baseFiveStable || !hasExtras || footer.dataset.footerVersion !== 'tw29') {
+    if (!baseStable || !hasExtras || footer.dataset.footerVersion !== 'tw29b') {
       footer.innerHTML = footerMarkup();
-      footer.dataset.footerVersion = 'tw29';
+      footer.dataset.footerVersion = 'tw29b';
     }
   }
 

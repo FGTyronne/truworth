@@ -35,36 +35,52 @@
 - SEO launch layer: canonical metadata, sitemap, robots rules, structured data and public acquisition pages.
 - Personal/account surfaces are `noindex` and blocked from crawler discovery where appropriate.
 - Mobile bottom navigation and footer navigation stabilization layer.
+- GitHub Web static smoke CI now fails on missing local references, bad production canonicals, removed `benefits.html` links, legacy Vercel URLs in active function source, missing crawler/security files, lost `noindex` controls, missing runtime scripts, and superseded 10-product Free entitlement copy.
 
 ## Technical checks completed during launch hardening
 - Current Render service is healthy and recent production builds/deploys completed successfully with no Render failure events found in the launch window.
 - `robots.txt` and `sitemap.xml` exist in the production build source and use the Render canonical host.
 - Supabase Edge Functions are active, including `import-product`, `purchase-vote`, `buyer-insights`, `stripe-checkout`, `stripe-portal`, `stripe-webhook`, `delete-account`, `trial-action`, `renewal-reminders` and `guest-assessment-quota`.
+- `purchase-vote` live v10 was newer than the repository copy. The live Decision Discipline/consent implementation was synced back to GitHub before deploying v11, preventing an accidental rollback to the former BUY / DON'T BUY implementation.
+- `purchase-vote` v11, `stripe-checkout` v8, `stripe-portal` v5 and `buyer-insights` v6 keep JWT verification enabled and no longer allow the former Vercel site as a browser origin.
+- `import-product` v6 remains JWT-protected; its importer identity now points to Render rather than the legacy Vercel URL.
+- `lifecycle-email` v2 is protected by the automation secret and its welcome-email start URL now points to Render. Its source is now tracked in GitHub as well as Supabase.
 - `stripe-webhook` verifies Stripe signatures with a five-minute tolerance, records event IDs for idempotency and updates `public.subscriptions` server-side.
+- `renewal-reminders` and `lifecycle-email` use the hashed automation-secret boundary rather than unauthenticated public execution.
+- `guest-assessment-quota` is intentionally callable without a user JWT, but restricts production origin, hashes the client IP-derived key server-side and fails closed if quota verification is unavailable.
+- Source for `delete-account` and `trial-action` has been narrowed to the Render production origin plus local development. Their live redeploy is intentionally not forced through connector safety controls because those functions can perform destructive account/billing actions.
 - Supabase security advisor currently reports leaked-password protection as disabled. This is an accepted Free-tier limitation for the lean launch and should be enabled when the account moves to a plan that supports it.
 - Supabase also reports the guest quota table has RLS enabled with no user policy; this is intentional because anon/authenticated roles are revoked and access is service-role-only.
 
 ## Must confirm before public launch
-1. Supabase Auth URL configuration
+1. Render production response headers
+   - The former `vercel.json` header policy does **not** configure the Render static site.
+   - In Render Static Site > Headers, apply at `/*`: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), geolocation=(), microphone=(), usb=()`, `X-Permitted-Cross-Domain-Policies: none`, and `Cross-Origin-Opener-Policy: same-origin-allow-popups`.
+   - For `/auth.html`, add `Cache-Control: no-store` and `Referrer-Policy: no-referrer`.
+   - Inventory Supabase, Stripe and CDN origins before adding a CSP; use Report-Only first rather than risking a production outage.
+2. Supabase Auth URL configuration
    - Site URL: `https://truworth-web.onrender.com` until the branded domain replaces it.
    - Redirect URL includes `https://truworth-web.onrender.com/auth.html`.
+   - Keep the former Vercel auth callback only for the temporary migration window while older confirmation/recovery links could still exist.
    - Re-test signup confirmation and password recovery from a real mailbox.
-2. Transactional email
-   - Verify signup confirmation, password recovery, trial start, cancellation, final-24h reminder, payment-failure and account-deletion emails using real mailboxes.
+3. Transactional email
+   - Verify signup confirmation, password recovery, welcome, trial start, cancellation, final-24h reminder, payment-failure and account-deletion emails using real mailboxes.
    - Avoid link tracking that rewrites authentication links.
-3. Payments
+4. Payments
    - Complete one real low-value/live Stripe subscription test, including 3-day trial eligibility, successful return, portal access, cancellation and webhook-driven subscription state.
    - Test cancellation before first trial charge and at least one failure/edge path.
-4. Search and domain
+5. Search and domain
    - Add the final production domain to Render when selected.
    - Replace Render canonical URLs, OG URLs, sitemap and security.txt canonical with the branded domain at cutover.
    - Add the production property to Google Search Console and submit the sitemap.
-5. Final device QA
+6. Final device QA
    - iPhone Safari and Android Chrome.
    - Guest assessment 1–3 -> fourth attempt gate -> signup -> email confirmation -> guest-history migration -> Free unlimited assessments -> five saved products -> sixth temporary result -> delete one -> save again -> compare -> mark purchased -> check-in -> insights -> password reset -> Plus trial -> personalised recommendation -> cancellation -> account deletion.
    - Test expired/used auth links, missing prices, currency mismatch, bad import URLs and manual-entry edge cases.
-6. Legal/commercial exactness
+7. Legal/commercial exactness
    - Confirm registered-office/controller details, practical retention periods, processor/subprocessor wording, cancellation/refund wording and final affiliate/sponsored disclosure before material paid marketing.
+8. Production deploy parity
+   - GitHub source has moved ahead of the currently live Render commit during hardening. Trigger/confirm a Render deploy from current `main` after the Render workspace is explicitly confirmed, then rerun production QA against that commit.
 
 ## Assistant launch-hardening lane
 These can be completed without waiting for domain/DNS or a real payment card:
@@ -78,6 +94,7 @@ These can be completed without waiting for domain/DNS or a real payment card:
 
 ## Owner-dependent launch lane
 These require account decisions, real-world verification or credentials/actions outside code:
+- confirm the Render workspace for production mutations and configure Render static-site response headers;
 - choose/connect the branded domain and DNS;
 - perform real mailbox auth/email tests;
 - perform the live Stripe purchase/refund/cancellation test;

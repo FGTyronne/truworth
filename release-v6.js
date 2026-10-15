@@ -230,7 +230,7 @@
   }
 
   signedInAccountPage = function() {
-    const limit = subscription.tier === 'plus' ? 'Unlimited saved products' : `${records.length} of 10 products saved`;
+    const limit = subscription.tier === 'plus' ? 'Unlimited saved products' : `${records.length} of 5 products saved`;
     const snapshot = buyerSnapshot();
     layout('Your profile', user.email, `
       <section class="account-overview profile-v6"><div class="account-profile"><div class="avatar">${esc((user.email || 'T').charAt(0).toUpperCase())}</div><div><span>Email</span><strong>${esc(user.email)}</strong></div></div><div class="account-stats"><div><span>Plan</span><strong>${subscription.tier === 'plus' ? 'TruWorth+' : 'Free'}</strong></div><div><span>Storage</span><strong>${limit}</strong></div></div><div class="account-actions"><a class="secondary-button" href="plans.html">Membership</a><button id="signOut" class="text-button" type="button">Sign out</button></div></section>

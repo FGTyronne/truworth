@@ -36,6 +36,7 @@ jobs:
             /security.html \
             /decision-support.html \
             /partner-with-truworth.html \
+            /commercial-disclosure.html \
             /member-benefits.html \
             /.well-known/security.txt
           do

@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const KEY = 'truworth_consent_v1';
-  const VERSION = '2026-10-14';
+  const VERSION = '2026-10-15';
   const css = `
   .tw-consent{position:fixed;z-index:9999;left:18px;right:18px;bottom:18px;max-width:860px;margin:auto;background:#171820;color:#fff;border-radius:22px;padding:18px 20px;box-shadow:0 22px 70px rgba(0,0,0,.28);display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
   .tw-consent h2{font-size:1rem;margin:0 0 6px}.tw-consent p{margin:0;color:rgba(255,255,255,.76);font-size:.86rem;line-height:1.45}.tw-consent a{color:#d8fa69}.tw-consent-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.tw-consent button{border:0;border-radius:999px;padding:10px 14px;font:inherit;font-weight:750;cursor:pointer}.tw-consent .primary{background:#d8fa69;color:#171820}.tw-consent .secondary{background:#fff;color:#171820}.tw-consent .quiet{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.25)}
@@ -19,8 +19,8 @@
     modal.innerHTML=`<div class="tw-consent-panel"><h2 id="twCookieTitle">Cookie & privacy settings</h2><p>Choose whether TruWorth may use optional browser technologies. Essential storage is always on because it is needed for sign-in, security, preferences and requested app functions.</p>
       <div class="tw-cookie-row"><div><strong>Essential</strong><span>Authentication/session storage, security, consent choice, core preferences and guest assessment storage. These are required for the service you request.</span></div><span class="tw-cookie-essential">Always on</span></div>
       <label class="tw-cookie-row"><div><strong>Analytics</strong><span>Optional measurement to understand how TruWorth is used and improve the service. TruWorth does not currently activate optional analytics before permission.</span></div><span class="tw-cookie-switch"><input id="twConsentAnalytics" type="checkbox" ${current.analytics?'checked':''}></span></label>
-      <label class="tw-cookie-row"><div><strong>Marketing & partner measurement</strong><span>Optional technologies for advertising, affiliate attribution or partner campaign measurement. These remain off unless you allow them and such functionality is enabled.</span></div><span class="tw-cookie-switch"><input id="twConsentMarketing" type="checkbox" ${current.marketing?'checked':''}></span></label>
-      <p><a href="cookies.html">Read the Cookie Policy</a> · <a href="privacy.html">Read the Privacy Notice</a></p>
+      <label class="tw-cookie-row"><div><strong>Marketing & partner measurement</strong><span>Optional measurement of commercial campaign impressions and clicks, and future affiliate attribution where enabled. This remains off unless you allow it. It is separate from recommendation scoring.</span></div><span class="tw-cookie-switch"><input id="twConsentMarketing" type="checkbox" ${current.marketing?'checked':''}></span></label>
+      <p><a href="cookies.html">Read the Cookie Policy</a> · <a href="privacy.html">Read the Privacy Notice</a> · <a href="commercial-disclosure.html">Commercial disclosure</a></p>
       <div class="actions"><button class="reject" id="twRejectAll" type="button">Reject non-essential</button><button class="save" id="twSaveCookies" type="button">Save choices</button></div></div>`;
     document.body.appendChild(modal);
     document.getElementById('twRejectAll')?.addEventListener('click',()=>save({analytics:false,marketing:false}));

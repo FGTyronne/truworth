@@ -3,8 +3,6 @@ import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 const APP = 'https://truworth-web.onrender.com';
 const allowedOrigins = new Set([
   APP,
-  'https://truworth.vercel.app',
-  'https://www.truworth.vercel.app',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
 ]);

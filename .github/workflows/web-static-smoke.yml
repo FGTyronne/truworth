@@ -34,6 +34,9 @@ jobs:
           test -f dist-web/.well-known/security.txt
           test -f dist-web/member-benefits.html
           test -f dist-web/partner-with-truworth.html
+          test -f dist-web/partner-enquiry.js
+          test -f dist-web/launch-hardening-v31.js
+          test -f dist-web/commercial-v32.js
           test -f dist-web/release.txt
           test "$(cat dist-web/release.txt)" = "$GITHUB_SHA"
       - name: Run static launch checks
@@ -42,3 +45,5 @@ jobs:
         run: node scripts/public-seo-smoke.mjs
       - name: Run recommendation outcome checks
         run: node scripts/decision-outcome-smoke.mjs
+      - name: Run commercial boundary checks
+        run: node scripts/commercial-boundary-smoke.mjs

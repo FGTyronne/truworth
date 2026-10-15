@@ -9,8 +9,8 @@ function insightsPage() {
 function plansPage() {
   const isPlus = subscription.tier === 'plus' && ['active','trialing'].includes(subscription.status);
   layout('Membership', 'Choose how much product history you want to keep.', `<section class="membership-sheet">
-    <article class="membership-row"><div class="membership-name"><span>Free</span><strong>£0</strong></div><div class="membership-copy"><h2>For occasional decisions</h2><p>Save up to 10 products, import retailer links, compare scores and track what you eventually buy.</p></div><span class="plan-status">${!isPlus ? 'Current plan' : 'Available'}</span></article>
-    <article class="membership-row"><div class="membership-name"><span>TruWorth+</span><strong>Unlimited</strong></div><div class="membership-copy"><h2>For a long-term purchase history</h2><p>Keep an unlimited searchable library and retain the full history of products you have considered.</p></div><button class="primary-button" type="button" disabled>${isPlus ? 'Current plan' : 'Payments coming next'}</button></article>
+    <article class="membership-row"><div class="membership-name"><span>Free</span><strong>£0</strong></div><div class="membership-copy"><h2>For occasional decisions</h2><p>Save up to 5 products, import retailer links, compare scores and track what you eventually buy.</p></div><span class="plan-status">${!isPlus ? 'Current plan' : 'Available'}</span></article>
+    <article class="membership-row"><div class="membership-name"><span>TruWorth+</span><strong>Unlimited</strong></div><div class="membership-copy"><h2>For a long-term purchase history</h2><p>Keep an unlimited searchable library and retain the full history of products you have considered.</p></div><button class="primary-button" type="button" disabled>${isPlus ? 'Current plan' : 'Loading membership…'}</button></article>
   </section>`, { kicker: 'Plans' });
 }
 
@@ -64,7 +64,7 @@ function passwordRecoveryPage() {
 }
 
 function signedInAccountPage() {
-  const limit = subscription.tier === 'plus' ? 'Unlimited saved products' : `${records.length} of 10 products saved`;
+  const limit = subscription.tier === 'plus' ? 'Unlimited saved products' : `${records.length} of 5 products saved`;
   layout('Your account', user.email, `<section class="account-overview"><div class="account-profile"><div class="avatar">${esc((user.email || 'T').charAt(0).toUpperCase())}</div><div><span>Email</span><strong>${esc(user.email)}</strong></div></div><div class="account-stats"><div><span>Plan</span><strong>${subscription.tier === 'plus' ? 'TruWorth+' : 'Free'}</strong></div><div><span>Storage</span><strong>${limit}</strong></div></div><div class="account-actions"><a class="secondary-button" href="plans.html">Membership</a><button id="signOut" class="text-button" type="button">Sign out</button></div></section>`, { kicker: 'Account' });
   $('signOut').addEventListener('click', async () => { await supabaseClient.auth.signOut(); location.href = 'index.html'; });
 }
@@ -74,7 +74,7 @@ async function syncGuestRecords() {
   const { data: sessionData } = await supabaseClient.auth.getSession();
   const currentUser = sessionData.session?.user;
   if (!currentUser) return;
-  const guestRecords = local.records.map(normaliseGuestRecord).slice(0, 10);
+  const guestRecords = local.records.map(normaliseGuestRecord).slice(0, 5);
   for (const record of guestRecords) {
     const inputs = { ...record.inputs, item: record.title };
     const metrics = score(inputs);

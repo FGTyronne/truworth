@@ -18,6 +18,11 @@ function cleanLocalRef(ref) {
   if (!clean || clean.includes('${') || clean.includes('<%')) return null;
   return decodeURIComponent(clean);
 }
+function canonicalFrom(text) {
+  return text.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i)?.[1]
+    || text.match(/<link\s+href=["']([^"']+)["']\s+rel=["']canonical["']/i)?.[1]
+    || null;
+}
 
 for (const file of htmlFiles) {
   const text = read(file);
@@ -28,7 +33,7 @@ for (const file of htmlFiles) {
     if (!exists(local)) fail(`${file}: missing local reference ${ref}`);
   }
 
-  const canonical = text.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i)?.[1];
+  const canonical = canonicalFrom(text);
   if (canonical && !canonical.startsWith('https://truworth-web.onrender.com/')) {
     fail(`${file}: canonical is not on the Render production host: ${canonical}`);
   }
@@ -64,11 +69,19 @@ if (exists('app.js')) {
 if (exists('sitemap.xml')) {
   const sitemap = read('sitemap.xml');
   if (/truworth\.vercel\.app/i.test(sitemap)) fail('sitemap.xml contains legacy Vercel URL');
-  const locs = [...sitemap.matchAll(/<loc>https:\/\/truworth-web\.onrender\.com\/?([^<]*)<\/loc>/g)].map((m) => m[1]);
-  if (!locs.length) fail('sitemap.xml contains no Render production URLs');
-  for (const loc of locs) {
-    const local = (loc || '').split('?')[0].split('#')[0];
-    if (local && !exists(local)) fail(`sitemap.xml: URL target missing from repo: ${local}`);
+  const urls = [...sitemap.matchAll(/<loc>(https:\/\/truworth-web\.onrender\.com\/?([^<]*))<\/loc>/g)].map((m) => ({ url: m[1], path: m[2] || '' }));
+  if (!urls.length) fail('sitemap.xml contains no Render production URLs');
+  for (const entry of urls) {
+    const localPath = entry.path.split('?')[0].split('#')[0];
+    const file = localPath || 'index.html';
+    if (!exists(file)) {
+      fail(`sitemap.xml: URL target missing from repo: ${file}`);
+      continue;
+    }
+    if (!file.endsWith('.html')) continue;
+    const canonical = canonicalFrom(read(file));
+    if (!canonical) fail(`${file}: sitemap page is missing a canonical URL`);
+    else if (canonical !== entry.url) fail(`${file}: canonical ${canonical} does not match sitemap URL ${entry.url}`);
   }
 } else fail('sitemap.xml is missing');
 

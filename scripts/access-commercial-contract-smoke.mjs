@@ -42,6 +42,11 @@ assert(/allows\?\.\('marketing'\)/.test(commercial), 'Commercial event measureme
 assert(/commercial relationships never affect truworth scores or recommendations/i.test(commercial), 'Commercial content must preserve recommendation-independence disclosure.');
 assert(/isPlus\(\)/.test(commercial), 'Commercial campaign hydration must not run for Plus users.');
 
+const commercialEvent = read('supabase/functions/commercial-event/index.ts');
+assert(/SHORT_WINDOW_LIMIT/.test(commercialEvent) && /DAILY_LIMIT/.test(commercialEvent), 'Commercial event endpoint must retain abuse rate limits.');
+assert(/visitor_hash/.test(commercialEvent) && /truworth-commercial-visitor-v1/.test(commercialEvent), 'Commercial event endpoint must use a keyed visitor hash rather than raw IP storage.');
+assert(/session_hash/.test(commercialEvent) && /deduplicated/.test(commercialEvent), 'Commercial impressions must retain session-level deduplication.');
+
 const partner = read('supabase/functions/partner-enquiry/index.ts');
 assert(/company_fax/.test(partner), 'Partner enquiry must retain honeypot protection.');
 assert(/since15/.test(partner) && /since24/.test(partner), 'Partner enquiry must retain short-window and daily rate limits.');

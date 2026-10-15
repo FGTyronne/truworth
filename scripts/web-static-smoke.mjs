@@ -66,7 +66,7 @@ if (exists('app.js')) {
   for (const script of releaseScripts) if (!exists(script)) fail(`app.js: release script missing: ${script}`);
 } else fail('app.js is missing');
 
-const shippedBrowserScripts = [...new Set([...releaseScripts, 'app.js', 'auth-callback.js'].filter(exists))];
+const shippedBrowserScripts = [...new Set([...releaseScripts, 'app.js', 'auth-callback.js', 'auth-overrides.js'].filter(exists))];
 for (const file of shippedBrowserScripts) {
   if (/truworth\.vercel\.app/i.test(read(file))) fail(`${file}: shipped browser script contains legacy Vercel production URL`);
 }

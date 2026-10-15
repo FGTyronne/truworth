@@ -36,5 +36,7 @@ jobs:
           test -f dist-web/partner-with-truworth.html
       - name: Run static launch checks
         run: node scripts/web-static-smoke.mjs
+      - name: Run public SEO checks
+        run: node scripts/public-seo-smoke.mjs
       - name: Run recommendation outcome checks
         run: node scripts/decision-outcome-smoke.mjs

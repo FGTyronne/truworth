@@ -20,16 +20,19 @@
     const href=kind==='house'?'plans.html':'partner-with-truworth.html';
     return `<section class="tw-partner-slot" data-kind="${kind}" aria-label="${copy[0]}"><div><small>${copy[0]}</small><strong>${copy[1]}</strong><p>${copy[2]}</p>${kind!=='house'?'<em>Commercial relationships never affect TruWorth scores or recommendations.</em>':''}</div><a href="${href}">${copy[3]}</a></section>`;
   }
+  function removeSlots(){document.querySelectorAll('.tw-partner-slot').forEach(el=>el.remove());}
   function insert(){
     styles();
-    if(isPlus()) return;
+    if(isPlus()){removeSlots();return;}
     const main=document.getElementById('main-content'); if(!main||main.querySelector('.tw-partner-slot')) return;
     const p=pageKey();
     let kind='advertise';
     if(p==='home') kind='house';
     if(p==='benefits') kind='benefit';
     if(['result','compare'].includes(p)){
-      const target = p==='compare' ? document.getElementById('comparison') : document.querySelector('.result-layout');
+      const target = p==='compare'
+        ? (document.getElementById('twDecisionMount') || document.getElementById('comparison'))
+        : document.querySelector('.result-layout');
       if(target) target.insertAdjacentHTML('afterend',slot('advertise')); else main.insertAdjacentHTML('beforeend',slot('advertise'));
       return;
     }
@@ -38,5 +41,6 @@
   }
   window.addEventListener('truworth:routed',()=>setTimeout(insert,0));
   window.addEventListener('truworth:release-ready',()=>setTimeout(insert,0));
+  window.addEventListener('truworth:subscription-change',()=>setTimeout(insert,0));
   setTimeout(insert,200);
 })();

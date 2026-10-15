@@ -3,6 +3,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 const APP='https://truworth-web.onrender.com';
 const allowed=new Set([APP,'http://localhost:3000','http://127.0.0.1:3000']);
 const TYPES=new Set(['advertising','member_benefit','affiliate','distribution','research','other']);
+const FROM='TruWorth <notifications@truworth.ramellacorporateconsulting.com>';
+const NOTIFY_TO='partnerships@ramellacorporateconsulting.com';
 
 function adminKey(){
   try { const keys=JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')||'{}'); if(keys?.default) return keys.default; } catch {}
@@ -16,6 +18,24 @@ function uaFamily(v:string){const s=v.toLowerCase();if(s.includes('edg/'))return
 function validEmail(v:string){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)&&v.length<=254;}
 function validUrl(v:string){if(!v)return true;try{const u=new URL(v);return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
 async function hmac(secret:string,value:string){const enc=new TextEncoder();const key=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);const bytes=new Uint8Array(await crypto.subtle.sign('HMAC',key,enc.encode(value)));return [...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');}
+async function notify(details:{contact_name:string;work_email:string;company_name:string;company_website:string;enquiry_type:string;message:string}){
+  const apiKey=Deno.env.get('RESEND_API_KEY')||'';if(!apiKey)return;
+  const text=[
+    'A new TruWorth partnership enquiry was submitted.',
+    '',
+    `Company: ${details.company_name}`,
+    `Contact: ${details.contact_name}`,
+    `Email: ${details.work_email}`,
+    `Type: ${details.enquiry_type}`,
+    `Website: ${details.company_website||'Not provided'}`,
+    '',
+    details.message,
+    '',
+    `Review: ${APP}/admin-partners.html`
+  ].join('\n');
+  const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${apiKey}`,'Content-Type':'application/json'},body:JSON.stringify({from:FROM,to:[NOTIFY_TO],reply_to:details.work_email,subject:`TruWorth partner enquiry · ${details.company_name}`,text})});
+  if(!r.ok){const body=await r.text();throw new Error(`Resend ${r.status}: ${body.slice(0,200)}`);}
+}
 
 Deno.serve(async(req:Request)=>{
   if(req.method==='OPTIONS')return new Response('ok',{headers:cors(req)});
@@ -43,6 +63,7 @@ Deno.serve(async(req:Request)=>{
 
     const {error}=await admin.from('partner_enquiries').insert({contact_name,work_email,company_name,company_website:company_website||null,enquiry_type,message,privacy_acknowledged:true,ip_hash,user_agent_family:uaFamily(req.headers.get('user-agent')||''),source_page:'partner-with-truworth',metadata:{form_version:'2026-10-15'}});
     if(error)throw error;
+    try{await notify({contact_name,work_email,company_name,company_website,enquiry_type,message});}catch(notificationError){console.error('partner-enquiry notification',notificationError instanceof Error?notificationError.message:String(notificationError));}
     return reply(req,{ok:true,message:'Thanks. Your enquiry has been received.'},201);
   }catch(error){console.error('partner-enquiry',error instanceof Error?error.message:String(error));return reply(req,{error:'We could not submit your enquiry. Please try again.'},500);}
 });

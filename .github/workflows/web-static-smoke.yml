@@ -20,6 +20,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Build Render artifact
+        run: bash render-build.sh
+      - name: Verify Render artifact
+        run: |
+          test -f dist-web/index.html
+          test -f dist-web/app.js
+          test -f dist-web/app.css
+          test -f dist-web/favicon.svg
+          test -f dist-web/robots.txt
+          test -f dist-web/sitemap.xml
+          test -f dist-web/security.txt
+          test -f dist-web/.well-known/security.txt
+          test -f dist-web/member-benefits.html
+          test -f dist-web/partner-with-truworth.html
       - name: Run static launch checks
         run: node scripts/web-static-smoke.mjs
       - name: Run recommendation outcome checks

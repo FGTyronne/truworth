@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 const APP='https://truworth-web.onrender.com';
-const allowed=new Set([APP,'https://truworth.vercel.app','https://www.truworth.vercel.app','http://localhost:3000','http://127.0.0.1:3000']);
+const allowed=new Set([APP,'http://localhost:3000','http://127.0.0.1:3000']);
 const cors=(req:Request)=>{const o=req.headers.get('origin')||'';return {'Access-Control-Allow-Origin':allowed.has(o)?o:APP,'Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin'}};
 const reply=(req:Request,b:unknown,s=200)=>new Response(JSON.stringify(b),{status:s,headers:{...cors(req),'Content-Type':'application/json','Cache-Control':'no-store'}});
 const form=(v:Record<string,string>)=>new URLSearchParams(v);

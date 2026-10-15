@@ -35,7 +35,7 @@
 - SEO launch layer: canonical metadata, sitemap, robots rules, structured data and public acquisition pages.
 - Personal/account surfaces are `noindex` and blocked from crawler discovery where appropriate.
 - Mobile bottom navigation and footer navigation stabilization layer.
-- GitHub Web static smoke CI now fails on missing local references, bad production canonicals, removed `benefits.html` links, legacy Vercel URLs in active function source, missing crawler/security files, lost `noindex` controls, missing runtime scripts, and superseded 10-product Free entitlement copy.
+- GitHub Web static smoke CI now fails on missing local references, bad or mismatched production canonicals, removed `benefits.html` links, legacy Vercel URLs in active function or shipped browser source, missing crawler/security files, lost `noindex` controls, missing runtime scripts, broken hardened-auth callback wiring and superseded 10-product Free entitlement copy.
 
 ## Technical checks completed during launch hardening
 - Current Render service is healthy and recent production builds/deploys completed successfully with no Render failure events found in the launch window.
@@ -48,7 +48,11 @@
 - `stripe-webhook` verifies Stripe signatures with a five-minute tolerance, records event IDs for idempotency and updates `public.subscriptions` server-side.
 - `renewal-reminders` and `lifecycle-email` use the hashed automation-secret boundary rather than unauthenticated public execution.
 - `guest-assessment-quota` is intentionally callable without a user JWT, but restricts production origin, hashes the client IP-derived key server-side and fails closed if quota verification is unavailable.
+- The guest quota RPC can be executed only by `service_role`; anon/authenticated roles cannot execute it or select/insert/update the underlying `guest_assessment_daily_usage` table. The RPC enforces three completed guest assessments per UTC day and opportunistically removes quota rows older than 31 days.
+- The Free five-saved-product rule is enforced by the database trigger `assessments_enforce_plan_limit`, not merely by browser code. The trigger now takes a transaction-scoped per-user advisory lock before counting records so concurrent requests cannot race past five.
+- User-owned tables checked during hardening have explicit authenticated-user RLS. `subscriptions` is readable by the owning authenticated user but has no client-side write policy.
 - Source for `delete-account` and `trial-action` has been narrowed to the Render production origin plus local development. Their live redeploy is intentionally not forced through connector safety controls because those functions can perform destructive account/billing actions.
+- Recent Supabase launch-window telemetry showed no non-2xx Edge Function responses, no function-runtime error/failed/exception messages and no Auth messages matching error/fail/invalid. Apparent Postgres `exception` matches were migration SQL text containing the intentional Free-limit exception rather than failed database operations.
 - Supabase security advisor currently reports leaked-password protection as disabled. This is an accepted Free-tier limitation for the lean launch and should be enabled when the account moves to a plan that supports it.
 - Supabase also reports the guest quota table has RLS enabled with no user policy; this is intentional because anon/authenticated roles are revoked and access is service-role-only.
 

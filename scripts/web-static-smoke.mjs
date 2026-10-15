@@ -8,6 +8,7 @@ const exists = (p) => fs.existsSync(path.join(root, p));
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 const rootFiles = fs.readdirSync(root, { withFileTypes: true }).filter((x) => x.isFile()).map((x) => x.name);
 const htmlFiles = rootFiles.filter((x) => x.endsWith('.html'));
+let releaseScripts = [];
 
 function fail(message) { failures.push(message); }
 function warn(message) { warnings.push(message); }
@@ -55,9 +56,9 @@ if (exists('app.css')) {
 if (exists('app.js')) {
   const app = read('app.js');
   const block = app.match(/const\s+files\s*=\s*\[([\s\S]*?)\];/m)?.[1] || '';
-  const scripts = [...block.matchAll(/["']([^"']+\.js)["']/g)].map((m) => m[1]);
-  if (!scripts.length) fail('app.js: could not resolve release script list');
-  for (const script of scripts) if (!exists(script)) fail(`app.js: release script missing: ${script}`);
+  releaseScripts = [...block.matchAll(/["']([^"']+\.js)["']/g)].map((m) => m[1]);
+  if (!releaseScripts.length) fail('app.js: could not resolve release script list');
+  for (const script of releaseScripts) if (!exists(script)) fail(`app.js: release script missing: ${script}`);
 } else fail('app.js is missing');
 
 if (exists('sitemap.xml')) {
@@ -84,10 +85,24 @@ for (const securityPath of ['security.txt', '.well-known/security.txt']) {
   if (/truworth\.vercel\.app/i.test(text)) fail(`${securityPath}: contains legacy Vercel URL`);
 }
 
-const legacyLimitFiles = ['account-v2.js','billing-v15.js','release-v6.js','library-v2.js'].filter(exists);
-for (const file of legacyLimitFiles) {
+const legacyLimitPattern = /of\s+10\s+products?\s+saved|save\s+up\s+to\s+10\s+(?:products?|assessments?)|of\s+10\s+saved\s+on\s+free|10-product\s+free\s+limit/i;
+for (const file of releaseScripts.filter(exists)) {
   const text = read(file);
-  if (/of 10 products saved|Save up to 10 products|of 10 saved on Free/i.test(text)) warn(`${file}: still contains superseded 10-product Free copy; final v27 overrides it, but source should be normalised`);
+  if (legacyLimitPattern.test(text)) fail(`${file}: contains superseded 10-product Free entitlement copy`);
+}
+
+const activeFunctionSources = [
+  'supabase/functions/stripe-checkout/index.ts',
+  'supabase/functions/stripe-portal/index.ts',
+  'supabase/functions/purchase-vote/index.ts',
+  'supabase/functions/buyer-insights/index.ts',
+  'supabase/functions/delete-account/index.ts',
+  'supabase/functions/trial-action/index.ts',
+  'supabase/functions/import-product/index.ts',
+  'supabase/functions/lifecycle-email/index.ts',
+].filter(exists);
+for (const file of activeFunctionSources) {
+  if (/truworth\.vercel\.app/i.test(read(file))) fail(`${file}: active function source contains legacy Vercel production URL`);
 }
 
 console.log(`Checked ${htmlFiles.length} root HTML pages.`);

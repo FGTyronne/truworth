@@ -1,117 +1,104 @@
 # TruWorth launch checklist
 
 ## Launch model
-- Phase 1 is a lean web-first commercial launch on `https://truworth-web.onrender.com`.
+- Phase 1 is a lean web-first commercial launch on `https://truworth-web.onrender.com` until a branded domain is connected.
 - GitHub `main` is the code source of truth. Render serves the production web frontend. Supabase provides auth, data and Edge Functions. Stripe provides billing. Resend provides transactional email.
-- Vercel is legacy/redirect compatibility, not the canonical production website.
+- Vercel is legacy redirect compatibility only, not the canonical production website.
 - Native iOS/Android public distribution remains Phase 2.
-- Recommendation logic and commercial relationships remain separated. Sponsorship, affiliate compensation or partner status must never increase a TruWorth score or cause a BUY outcome.
+- Recommendation logic and commercial relationships remain separate. Sponsorship, affiliate compensation or partner status must never increase a TruWorth score or cause a BUY outcome.
 
 ## Current access and entitlement model
-- Guest: up to 3 completed product assessments per UTC day, enforced server-side using a one-way hashed IP-derived quota key. Raw IP addresses are not stored in the quota table.
+- Guest: up to 3 completed product assessments per UTC day, enforced server-side using a one-way keyed hash derived from the connecting IP. Raw IP addresses are not stored in the quota table.
 - Free account: unlimited product assessments/searches, with up to 5 products saved at one time.
 - At the Free 5-product limit, users may continue assessing products; additional results are temporary until a saved product is removed or the user upgrades.
 - TruWorth+: unlimited assessments and saved history, personalised Decision Profile support, BUY / WAIT / SKIP / NEITHER decision guidance, premium insights and Member Benefits.
-- The 5-product Free save allowance is a current commercial setting and may be reduced later.
+- The 5-product Free allowance is a current commercial setting and may be reduced later.
 
-## Already implemented
-- Mobile-first purchase assessment flow and product-link import.
-- Guest assessment flow without mandatory signup before first use.
-- Server-side guest daily assessment quota.
-- Supabase RLS on user-owned tables and service-role-only guest quota storage.
-- Auth confirmation/recovery callback page.
-- Private financial profile, behavioural Decision Profile and explicit recommendation consent controls.
-- Currency mismatch and missing-price blocks for personalised recommendations.
-- Server-gated TruWorth+ recommendation logic with protected weights/thresholds.
-- Free 5-saved-product database enforcement plus frontend temporary-result handling.
-- Self-service account deletion endpoint and UI, including Stripe cancellation handling before account closure.
-- Privacy, Terms, Cookies, Security and Decision Support pages.
-- Member Benefits surface split between TruWorth Originals and future verified Partner Benefits.
-- Light Free-tier house/partner placement framework, with TruWorth+ ad-free and no placement inside the recommendation itself.
-- Render static-site production host using `bash render-build.sh`.
-- Root `/security.txt` plus `/.well-known/security.txt` publication through the Render build.
-- Stripe Checkout, portal and signed webhook functions pointing users back to Render.
-- Stripe webhook idempotency ledger and server-side subscription-state updates.
-- SEO launch layer: canonical metadata, sitemap, robots rules, structured data and public acquisition pages.
-- Personal/account surfaces are `noindex` and blocked from crawler discovery where appropriate.
-- Mobile bottom navigation and footer navigation stabilization layer.
-- GitHub Web static smoke CI now fails on missing local references, bad or mismatched production canonicals, removed `benefits.html` links, legacy Vercel URLs in active function or shipped browser source, missing crawler/security files, lost `noindex` controls, missing runtime scripts, broken hardened-auth callback wiring and superseded 10-product Free entitlement copy.
+## Autonomous launch-hardening completed
+- Guest assessment flow and server-side 3/day quota.
+- Free unlimited assessment model with database-enforced 5-saved-product cap and temporary-result handling at capacity.
+- Auth confirmation/recovery callback hardening and account deletion flow.
+- Financial profile, behavioural Decision Profile and explicit personalised-recommendation consent.
+- Server-gated Plus recommendation logic with protected weights/thresholds, missing-price block and currency-mismatch block.
+- Decision outcome regression coverage for BUY / WAIT / SKIP / NEITHER combinations.
+- Product importer with SSRF/private-network protection, response-size/redirect limits, price provenance, variant handling and `exact / starting / sale / monthly / unknown` price classification with confidence.
+- Factor-based “What would change TruWorth’s mind?” explanation surface without allowing AI to override the deterministic result.
+- Accessibility/failure-state hardening including skip navigation, focus-visible behaviour, reduced-motion handling, offline messaging and clearer product-import evidence.
+- Mobile bottom navigation/footer stabilisation.
+- Privacy, Terms, Cookies, Security, Decision Support and Commercial & Affiliate Disclosure pages aligned to the current product architecture.
+- Consent version refreshed for live optional partner-campaign measurement; existing users must make a fresh optional-marketing choice.
+- TruWorth+ remains ad-free. Commercial placements remain outside the personalised recommendation surface and are excluded from account/settings/plans/assessment pages.
+- Partner enquiry form with server validation, honeypot, short-window/daily abuse controls, keyed IP hash and Resend notification path.
+- Commercial backend tables for partner relationships, Member Benefits, campaigns and privacy-conscious impression/click events.
+- Commercial event telemetry now has keyed visitor hashing, session-level impression deduplication and abuse-rate budgets to reduce analytics poisoning.
+- Private partner/commercial admin dashboard with enquiry pipeline, active partner/benefit/campaign counts and 30-day impression/click/CTR reporting.
+- Partner administration remains JWT-protected and additionally gated by the service-role-only `app_admins` list.
+- User-owned Supabase tables have explicit authenticated grants plus owner-scoped RLS. Internal/commercial tables are service-role-only.
+- Public `SECURITY DEFINER` functions were audited; normal anon/authenticated roles cannot execute the internal bootstrap or guest-quota RPC.
+- Current browser-facing Edge Function origins are Render plus local development where appropriate; Vercel is no longer an active browser origin for the current production functions reviewed.
+- `purchase-vote`, Stripe Checkout, commercial telemetry and partner admin deployed from current repository source.
+- Render build publishes root and `/.well-known/security.txt` security contacts.
+- Render build emits `release.txt` containing the exact Git commit used for the production artifact.
+- Every Render build rewrites app-shell `app.js` and `app.css` URLs with the current release SHA to prevent stale-loader/browser-cache regressions.
+- Static CI validates local references, private-page `noindex`, canonical/SEO integrity, security files, active runtime scripts, hardened auth callbacks, no legacy public Vercel URLs and no superseded 10-product Free entitlement copy.
+- CI additionally protects guest/Free/Plus entitlement rules, decision gates, importer security/classification, consent, commercial independence, telemetry anti-abuse controls and private admin boundaries.
+- Scheduled production smoke test checks critical Render routes/assets, `release.txt` parity, robots/sitemap and the standard security.txt endpoint every six hours, with manual dispatch support.
+- Render production was manually reconciled after unreliable Git auto-deploy behaviour and is serving the final hardening commit recorded below.
 
-## Technical checks completed during launch hardening
-- Current Render service is healthy and recent production builds/deploys completed successfully with no Render failure events found in the launch window.
-- `robots.txt` and `sitemap.xml` exist in the production build source and use the Render canonical host.
-- Supabase Edge Functions are active, including `import-product`, `purchase-vote`, `buyer-insights`, `stripe-checkout`, `stripe-portal`, `stripe-webhook`, `delete-account`, `trial-action`, `renewal-reminders` and `guest-assessment-quota`.
-- `purchase-vote` live v10 was newer than the repository copy. The live Decision Discipline/consent implementation was synced back to GitHub before deploying v11, preventing an accidental rollback to the former BUY / DON'T BUY implementation.
-- `purchase-vote` v11, `stripe-checkout` v8, `stripe-portal` v5 and `buyer-insights` v6 keep JWT verification enabled and no longer allow the former Vercel site as a browser origin.
-- `import-product` v6 remains JWT-protected; its importer identity now points to Render rather than the legacy Vercel URL.
-- `lifecycle-email` v2 is protected by the automation secret and its welcome-email start URL now points to Render. Its source is now tracked in GitHub as well as Supabase.
-- `stripe-webhook` verifies Stripe signatures with a five-minute tolerance, records event IDs for idempotency and updates `public.subscriptions` server-side.
-- `renewal-reminders` and `lifecycle-email` use the hashed automation-secret boundary rather than unauthenticated public execution.
-- `guest-assessment-quota` is intentionally callable without a user JWT, but restricts production origin, hashes the client IP-derived key server-side and fails closed if quota verification is unavailable.
-- The guest quota RPC can be executed only by `service_role`; anon/authenticated roles cannot execute it or select/insert/update the underlying `guest_assessment_daily_usage` table. The RPC enforces three completed guest assessments per UTC day and opportunistically removes quota rows older than 31 days.
-- The Free five-saved-product rule is enforced by the database trigger `assessments_enforce_plan_limit`, not merely by browser code. The trigger now takes a transaction-scoped per-user advisory lock before counting records so concurrent requests cannot race past five.
-- User-owned tables checked during hardening have explicit authenticated-user RLS. `subscriptions` is readable by the owning authenticated user but has no client-side write policy.
-- Source for `delete-account` and `trial-action` has been narrowed to the Render production origin plus local development. Their live redeploy is intentionally not forced through connector safety controls because those functions can perform destructive account/billing actions.
-- Recent Supabase launch-window telemetry showed no non-2xx Edge Function responses, no function-runtime error/failed/exception messages and no Auth messages matching error/fail/invalid. Apparent Postgres `exception` matches were migration SQL text containing the intentional Free-limit exception rather than failed database operations.
-- Supabase security advisor currently reports leaked-password protection as disabled. This is an accepted Free-tier limitation for the lean launch and should be enabled when the account moves to a plan that supports it.
-- Supabase also reports the guest quota table has RLS enabled with no user policy; this is intentional because anon/authenticated roles are revoked and access is service-role-only.
+## Current verified production state
+- Final hardening head at verification: `0a83db919937ba905a0ac3641fe573f89f2c9849`.
+- Web static smoke CI run for that SHA: successful.
+- Render deploy `dep-db8gnpe7bikc73e2qlv0`: live on the same SHA.
+- `commercial-event`: ACTIVE v2, public only by design, origin constrained, hashed visitor/session controls, server-side campaign validation and rate limiting.
+- `partner-admin`: ACTIVE v2, JWT verified and app-admin gated.
+- `purchase-vote`: ACTIVE v12, JWT verified.
+- `stripe-checkout`: ACTIVE v9, JWT verified.
+- `import-product`: ACTIVE v7, JWT verified.
+- Recent reviewed Supabase Edge Function telemetry showed no recorded 4xx/5xx responses in the examined launch window.
 
-## Must confirm before public launch
-1. Render production response headers
-   - The former `vercel.json` header policy does **not** configure the Render static site.
-   - In Render Static Site > Headers, apply at `/*`: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), geolocation=(), microphone=(), usb=()`, `X-Permitted-Cross-Domain-Policies: none`, and `Cross-Origin-Opener-Policy: same-origin-allow-popups`.
-   - For `/auth.html`, add `Cache-Control: no-store` and `Referrer-Policy: no-referrer`.
-   - Inventory Supabase, Stripe and CDN origins before adding a CSP; use Report-Only first rather than risking a production outage.
-2. Supabase Auth URL configuration
-   - Site URL: `https://truworth-web.onrender.com` until the branded domain replaces it.
-   - Redirect URL includes `https://truworth-web.onrender.com/auth.html`.
-   - Keep the former Vercel auth callback only for the temporary migration window while older confirmation/recovery links could still exist.
-   - Re-test signup confirmation and password recovery from a real mailbox.
-3. Transactional email
-   - Verify signup confirmation, password recovery, welcome, trial start, cancellation, final-24h reminder, payment-failure and account-deletion emails using real mailboxes.
-   - Avoid link tracking that rewrites authentication links.
-4. Payments
-   - Complete one real low-value/live Stripe subscription test, including 3-day trial eligibility, successful return, portal access, cancellation and webhook-driven subscription state.
-   - Test cancellation before first trial charge and at least one failure/edge path.
-5. Search and domain
-   - Add the final production domain to Render when selected.
-   - Replace Render canonical URLs, OG URLs, sitemap and security.txt canonical with the branded domain at cutover.
-   - Add the production property to Google Search Console and submit the sitemap.
-6. Final device QA
-   - iPhone Safari and Android Chrome.
-   - Guest assessment 1–3 -> fourth attempt gate -> signup -> email confirmation -> guest-history migration -> Free unlimited assessments -> five saved products -> sixth temporary result -> delete one -> save again -> compare -> mark purchased -> check-in -> insights -> password reset -> Plus trial -> personalised recommendation -> cancellation -> account deletion.
-   - Test expired/used auth links, missing prices, currency mismatch, bad import URLs and manual-entry edge cases.
-7. Legal/commercial exactness
-   - Confirm registered-office/controller details, practical retention periods, processor/subprocessor wording, cancellation/refund wording and final affiliate/sponsored disclosure before material paid marketing.
-8. Production deploy parity
-   - GitHub source has moved ahead of the currently live Render commit during hardening. Trigger/confirm a Render deploy from current `main` after the Render workspace is explicitly confirmed, then rerun production QA against that commit.
+## Security/advisor position
+- Supabase advisor reports RLS-without-policy INFO notices on internal service-role-only tables. This is intentional: anon/authenticated direct table grants are revoked, and public access goes through constrained Edge Functions rather than direct Data API table access.
+- Supabase advisor still reports leaked-password protection disabled. Enable it if/when the project plan/account permits or exposes the setting.
+- Performance advisor currently reports unused-index INFO notices only. Do not remove launch indexes until real traffic/query history provides evidence.
+- Render Git auto-deploy is configured but was unreliable during hardening. The scheduled `Production smoke` workflow now detects source/production SHA drift; the underlying Render-Git webhook/integration should still be reconnected in the Render dashboard if drift recurs.
 
-## Assistant launch-hardening lane
-These can be completed without waiting for domain/DNS or a real payment card:
-- remove stale entitlement copy and contradictory old limits from loaded source files;
-- audit canonical/SEO/noindex/robots/sitemap consistency;
-- audit current Render deploy health and Supabase security/function status;
-- tighten legacy Vercel references where they are no longer required without breaking native/development flows;
-- review public legal/decision-support consistency against the actual product behaviour;
-- review import, recommendation and navigation failure handling;
-- maintain this checklist as the release source of truth.
+## Owner-dependent launch actions still required
+1. **Branded domain and DNS**
+   - Select/connect the final TruWorth domain to Render.
+   - At cutover, replace Render-host canonical/OG/sitemap/security URLs with the branded domain and update Supabase auth redirects.
 
-## Owner-dependent launch lane
-These require account decisions, real-world verification or credentials/actions outside code:
-- confirm the Render workspace for production mutations and configure Render static-site response headers;
-- choose/connect the branded domain and DNS;
-- perform real mailbox auth/email tests;
-- perform the live Stripe purchase/refund/cancellation test;
-- add/verify Google Search Console property;
-- perform physical iPhone/Android QA;
-- confirm company/legal particulars that should appear publicly.
+2. **Real mailbox authentication/email QA**
+   - Complete signup confirmation and password recovery through a real inbox.
+   - Verify welcome, trial/cancellation/reminder/payment-failure/account-deletion emails as applicable.
+   - Confirm auth links are not rewritten by email tracking.
 
-## Deferred until after initial validation
+3. **Real Stripe lifecycle QA**
+   - Perform one genuine low-value/live subscription transaction using a real payment method.
+   - Verify 3-day trial eligibility, Plus unlock, successful return, webhook state, portal access, cancellation and at least one cancellation/failure edge path.
+   - Refund/reconcile the test transaction if appropriate.
+
+4. **Final public company/legal particulars**
+   - Confirm the registered-office/contact particulars you want published.
+   - Confirm ICO registration/reference if applicable.
+   - Make the final owner decision on refund/cancellation wording and any additional retention commitments.
+
+5. **Search launch**
+   - Add/verify the final production property in Google Search Console.
+   - Submit the sitemap after domain cutover.
+
+6. **Physical-device QA**
+   - Test iPhone Safari and Android Chrome with real touch/keyboard/browser behaviour.
+   - Run guest -> fourth-attempt gate -> signup -> Free -> five saved -> temporary sixth result -> delete/save -> Plus trial -> personalised recommendation -> cancellation/account-deletion journeys.
+
+7. **Render Git integration**
+   - If scheduled production parity monitoring reports drift again, reconnect/repair the GitHub integration/webhook in the Render dashboard. The connector available to ChatGPT does not expose that control.
+
+## Deferred until after web validation
 - Native app-store distribution and store-compliant billing.
-- Paid acquisition until conversion economics are understood.
-- Google/third-party advertising until an appropriate UK/EEA consent/CMP implementation is in place.
-- Affiliate monetisation at scale until partner governance and traffic justify it.
-- Supabase Pro operational/security upgrades where not available on the current plan.
+- Direct migration of the remaining native `mobile/App.tsx` legacy Vercel constants once a full-file-safe editing path is available; legacy URLs currently redirect to Render.
+- Paid acquisition at scale until conversion economics are known.
+- Google/third-party ad networks until any provider-specific UK/EEA CMP/IAB requirements are satisfied.
+- Affiliate monetisation at scale until live partner inventory and traffic justify it.
 
 ## Cost-control principles
 - Keep fixed launch infrastructure lean while validating demand.

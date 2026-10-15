@@ -38,7 +38,7 @@ async function signup(event) {
   const message = $('signupMessage');
   message.textContent = '';
   const email = $('signupEmail').value.trim();
-  const { data, error } = await supabaseClient.auth.signUp({ email, password: $('signupPassword').value, options: { emailRedirectTo: `${location.origin}/account.html` } });
+  const { data, error } = await supabaseClient.auth.signUp({ email, password: $('signupPassword').value, options: { emailRedirectTo: `${location.origin}/auth.html` } });
   if (error) { message.textContent = error.message; message.className = 'form-message error'; return; }
   message.textContent = data.session ? 'Account created. You are signed in.' : 'Check your email to confirm your account, then sign in.';
   message.className = 'form-message success';
@@ -48,7 +48,7 @@ async function resetPassword() {
   const email = $('loginEmail').value.trim();
   const message = $('loginMessage');
   if (!email) { message.textContent = 'Enter your email address first.'; return; }
-  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/account.html` });
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/auth.html` });
   message.textContent = error ? error.message : 'Password reset email sent.';
   message.className = `form-message ${error ? 'error' : 'success'}`;
 }

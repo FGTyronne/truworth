@@ -58,6 +58,16 @@ assert(/Partnership enquiries/i.test(privacy), 'Privacy notice must describe par
 assert(/Optional analytics\/marketing/i.test(privacy), 'Privacy notice must describe optional commercial measurement.');
 assert(/Commercial &amp; Affiliate Disclosure/i.test(privacy), 'Privacy notice must link the commercial disclosure.');
 
+const cookies = read('cookies.html');
+assert(/Commercial-measurement session identifier/i.test(cookies), 'Cookie policy must describe the commercial-measurement session identifier.');
+assert(/impression or click/i.test(cookies), 'Cookie policy must describe live partner campaign measurement.');
+assert(/commercial-disclosure\.html/i.test(cookies), 'Cookie policy must link the commercial disclosure.');
+
+const consent = read('consent-v25.js');
+assert(/VERSION\s*=\s*'2026-10-15'/.test(consent), 'Consent version must reflect the live partner-measurement disclosure update.');
+assert(/Marketing & partner measurement/.test(consent), 'Consent UI must expose a distinct marketing/partner measurement category.');
+assert(/impression.*click|click.*impression/i.test(consent), 'Consent UI must describe campaign impression/click measurement.');
+
 const config = read('supabase/config.toml');
 assert(/\[functions\.guest-assessment-quota\][\s\S]*?verify_jwt\s*=\s*false/.test(config), 'Guest quota must remain callable without an account.');
 assert(/\[functions\.partner-enquiry\][\s\S]*?verify_jwt\s*=\s*false/.test(config), 'Partner enquiry must remain callable without an account.');
@@ -71,4 +81,4 @@ if (failures.length) {
   console.error(`\n${failures.length} access/commercial contract check(s) failed.`);
   process.exit(1);
 }
-console.log('Access, recommendation, importer and commercial contract checks passed.');
+console.log('Access, recommendation, importer, consent and commercial contract checks passed.');

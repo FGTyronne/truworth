@@ -1,5 +1,5 @@
 (async()=>{
-  const version='20261015b';
+  const version='20261015c';
   const files=[
     'core-v2.js',
     'boot-gate.js',

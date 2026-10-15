@@ -10,6 +10,9 @@ verify_jwt = true
 [functions.guest-assessment-quota]
 verify_jwt = false
 
+[functions.partner-enquiry]
+verify_jwt = false
+
 [functions.stripe-checkout]
 verify_jwt = true
 

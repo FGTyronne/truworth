@@ -20,6 +20,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check browser script syntax
+        run: |
+          node --check app.js
+          node --check partner-enquiry.js
+          node --check launch-hardening-v31.js
+          node --check commercial-v32.js
       - name: Build Render artifact
         run: bash render-build.sh
       - name: Verify Render artifact
@@ -45,5 +51,7 @@ jobs:
         run: node scripts/public-seo-smoke.mjs
       - name: Run recommendation outcome checks
         run: node scripts/decision-outcome-smoke.mjs
+      - name: Run importer contract checks
+        run: node scripts/importer-contract-smoke.mjs
       - name: Run commercial boundary checks
         run: node scripts/commercial-boundary-smoke.mjs

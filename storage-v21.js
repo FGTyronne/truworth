@@ -57,7 +57,7 @@
       const currentUser = sessionData.session?.user;
       if (!currentUser) return;
 
-      const guestRecords = local.records.map(normaliseGuestRecord).slice(0, 10);
+      const guestRecords = local.records.map(normaliseGuestRecord).slice(0, 5);
       for (const record of guestRecords) {
         const inputs = { ...record.inputs, item: record.title };
         const metrics = score(inputs);

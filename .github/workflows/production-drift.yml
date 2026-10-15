@@ -1,0 +1,44 @@
+name: Production drift
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Compare production release with main
+        run: |
+          expected="$(git rev-parse HEAD)"
+          live="$(curl --fail --silent --show-error --retry 4 --retry-delay 4 https://truworth-web.onrender.com/release.txt | tr -d '\r\n')"
+          echo "Expected: $expected"
+          echo "Live:     $live"
+          test "$live" = "$expected"
+      - name: Check critical production endpoints
+        run: |
+          for path in \
+            / \
+            /assess.html \
+            /plans.html \
+            /privacy.html \
+            /terms.html \
+            /cookies.html \
+            /security.html \
+            /decision-support.html \
+            /partner-with-truworth.html \
+            /member-benefits.html \
+            /.well-known/security.txt
+          do
+            echo "Checking $path"
+            curl --fail --silent --show-error --retry 3 --retry-delay 2 --output /dev/null "https://truworth-web.onrender.com$path"
+          done

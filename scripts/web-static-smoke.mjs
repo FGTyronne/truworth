@@ -122,6 +122,27 @@ for (const file of releaseScripts.filter(exists)) {
   if (legacyLimitPattern.test(text)) fail(`${file}: contains superseded 10-product Free entitlement copy`);
 }
 
+if (exists('storage-v21.js')) {
+  const storageSource = read('storage-v21.js');
+  if (/slice\(0,\s*10\)/.test(storageSource)) fail('storage-v21.js: guest-to-account migration can exceed the current five-product Free capacity');
+  if (!/localStorage\.removeItem\(key\)/.test(storageSource)) fail('storage-v21.js: legacy persistent guest state is not explicitly removed');
+}
+if (exists('guest-access-v27.js')) {
+  const guestAccess = read('guest-access-v27.js');
+  if (/localStorage\.setItem\(\s*LOCAL_KEY/.test(guestAccess)) fail('guest-access-v27.js: guest state must remain session-only after account migration');
+  if (!/sessionStorage\.setItem\(\s*LOCAL_KEY/.test(guestAccess)) fail('guest-access-v27.js: cleared guest state is not written back to session storage after account migration');
+  if (!/FREE_SAVED_LIMIT\s*=\s*5/.test(guestAccess)) fail('guest-access-v27.js: Free saved-product limit drifted from five');
+  if (!/GUEST_DAILY_LIMIT\s*=\s*3/.test(guestAccess)) fail('guest-access-v27.js: guest daily assessment limit drifted from three');
+}
+if (exists('privacy.html')) {
+  const privacy = read('privacy.html');
+  if (!/one-way keyed hash/i.test(privacy) || !/raw IP address/i.test(privacy)) fail('privacy.html: guest quota hashing disclosure is missing or incomplete');
+}
+if (exists('cookies.html')) {
+  const cookies = read('cookies.html');
+  if (!/Temporary TruWorth guest storage/i.test(cookies) || !/session storage/i.test(cookies)) fail('cookies.html: current session-only guest storage is not described');
+}
+
 const activeFunctionSources = [
   'supabase/functions/stripe-checkout/index.ts',
   'supabase/functions/stripe-portal/index.ts',

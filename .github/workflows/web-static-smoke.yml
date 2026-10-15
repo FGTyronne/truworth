@@ -49,6 +49,8 @@ jobs:
           test -f dist-web/commercial-v32.js
           test -f dist-web/release.txt
           test "$(cat dist-web/release.txt)" = "$GITHUB_SHA"
+          grep -R -F "app.js?v=$GITHUB_SHA" dist-web/*.html >/dev/null
+          grep -R -F "app.css?v=$GITHUB_SHA" dist-web/*.html >/dev/null
       - name: Run static launch checks
         run: node scripts/web-static-smoke.mjs
       - name: Run public SEO checks

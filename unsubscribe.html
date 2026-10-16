@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#fbfaf6">
+  <title>Unsubscribe | TruWorth</title>
+  <meta name="description" content="Manage your TruWorth newsletter subscription.">
+  <link rel="stylesheet" href="app.css">
+  <link rel="icon" href="favicon.svg">
+</head>
+<body class="tw-unsubscribe-body">
+  <main class="tw-unsubscribe-shell">
+    <a class="tw-unsubscribe-brand" href="/"><span>T</span>TruWorth</a>
+    <section class="tw-unsubscribe-card" id="unsubscribeCard">
+      <p class="kicker">Email preferences</p>
+      <h1>Leaving the newsletter?</h1>
+      <p>Tell us why, then confirm. This only removes you from TruWorth news, benefits, specials and product updates. Necessary account and transactional emails are separate.</p>
+      <form id="unsubscribeForm">
+        <div class="tw-unsubscribe-reasons" role="radiogroup" aria-label="Reason for unsubscribing">
+          <label><input type="radio" name="reason" value="too_many_emails"> <span>I receive too many emails</span></label>
+          <label><input type="radio" name="reason" value="not_relevant"> <span>The updates are not relevant to me</span></label>
+          <label><input type="radio" name="reason" value="just_browsing"> <span>I was only trying TruWorth</span></label>
+          <label><input type="radio" name="reason" value="prefer_no_marketing"> <span>I do not want marketing emails</span></label>
+          <label><input type="radio" name="reason" value="privacy"> <span>Privacy preference</span></label>
+          <label><input type="radio" name="reason" value="other"> <span>Other</span></label>
+        </div>
+        <label for="unsubscribeDetail"><strong>Anything else? <span style="font-weight:400;color:#8a8d99">Optional</span></strong></label>
+        <textarea id="unsubscribeDetail" class="tw-unsubscribe-detail" maxlength="500" placeholder="You can leave a short note if you want."></textarea>
+        <p class="tw-unsubscribe-status" id="unsubscribeStatus" role="status" aria-live="polite"></p>
+        <div class="tw-unsubscribe-actions">
+          <button class="tw-unsubscribe-confirm" id="unsubscribeConfirm" type="submit">Confirm unsubscribe</button>
+          <a class="tw-unsubscribe-back" href="/">Keep me subscribed</a>
+        </div>
+      </form>
+      <p class="tw-unsubscribe-note">If you change your mind later, you can subscribe again from TruWorth.</p>
+    </section>
+  </main>
+  <script src="unsubscribe.js" defer></script>
+</body>
+</html>

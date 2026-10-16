@@ -56,9 +56,6 @@ async function syncResend(email: string) {
   if (segment.error && segment.error.statusCode !== 404) {
     throw new Error(`Resend segment removal failed: ${segment.error.message}`);
   }
-
-  const updated = await resend.contacts.update({ email, unsubscribed: true });
-  if (updated.error) throw new Error(`Resend contact unsubscribe failed: ${updated.error.message}`);
 }
 
 Deno.serve(async (req: Request) => {

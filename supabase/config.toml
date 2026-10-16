@@ -36,3 +36,9 @@ verify_jwt = false
 
 [functions.voucher-admin]
 verify_jwt = true
+
+[functions.newsletter-subscribe]
+verify_jwt = false
+
+[functions.newsletter-unsubscribe]
+verify_jwt = false

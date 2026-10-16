@@ -1,27 +1,38 @@
 (() => {
-  const privatePages = new Set(['assess','result','compare','watchlist','owned','insights','settings']);
-  const originalRouteV23 = typeof route === 'function' ? route : null;
-  if (originalRouteV23) {
-    route = function routeV23() {
-      if (!user && privatePages.has(page())) {
-        const file = location.pathname.split('/').pop() || 'index.html';
-        sessionStorage.setItem('truworth-return-to', `${file}${location.search || ''}`);
-        location.href = 'account.html';
-        return;
-      }
-      return originalRouteV23();
-    };
+  'use strict';
+
+  const boughtRecords = () => records.filter((record) => record.status === 'purchased' || purchases?.[record.id]);
+
+  function motiveLabel(motive) {
+    if (motive === 'need') return 'practical';
+    if (motive === 'joy') return 'enjoyment-led';
+    if (motive === 'image') return 'impulse / image-led';
+    return 'mixed';
+  }
+
+  function dominantMotive(items) {
+    const counts = items.reduce((acc, record) => {
+      const key = record.inputs?.motive || 'unknown';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
   }
 
   if (typeof login === 'function') {
     login = async function loginV23(event) {
       event.preventDefault();
       const message = $('loginMessage');
-      message.textContent = '';
-      const { error } = await supabaseClient.auth.signInWithPassword({ email: $('loginEmail').value.trim(), password: $('loginPassword').value });
+      if (message) message.textContent = '';
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email: $('loginEmail').value.trim(),
+        password: $('loginPassword').value
+      });
       if (error) {
-        message.textContent = error.message;
-        message.className = 'form-message error';
+        if (message) {
+          message.textContent = error.message;
+          message.className = 'form-message error';
+        }
         return;
       }
       await syncGuestRecords();
@@ -31,161 +42,99 @@
     };
   }
 
-  let applying = false;
-  const setText = (node, text) => {
-    if (node && node.textContent !== text) node.textContent = text;
+  homePage = function homePageV23() {
+    const ranked = sortedRecords().slice(0, 4);
+    const bought = boughtRecords();
+    const conversion = records.length ? Math.round((bought.length / records.length) * 100) : 0;
+    const motive = dominantMotive(records);
+
+    layout('', '', `
+      <section class="home-stage">
+        <div class="home-copy">
+          <span class="home-pill">Before you spend</span>
+          <h1>Thinking about buying it?<br><em>Check if it’s worth it for you.</em></h1>
+          <p>TruWorth looks at the price, how much you expect to use it, how much you want it and the alternatives. Then it gives you a clear view before you spend.</p>
+          <div class="home-primary-actions">
+            <a class="primary-button hero-action" href="assess.html">Check a purchase</a>
+            <a class="secondary-button" href="assess.html?mode=link">Paste a product link</a>
+          </div>
+          <div class="home-trust"><span>3 guest checks a day</span><span>About 2 minutes</span><span>Free account: unlimited checks</span></div>
+        </div>
+        <div class="home-play-card" aria-hidden="true">
+          <div class="play-orbit orbit-one"></div><div class="play-orbit orbit-two"></div>
+          <div class="play-score"><span>TruWorth</span><strong>82</strong><small>Worth a closer look</small></div>
+          <div class="play-chip chip-one">Will you use it?</div>
+          <div class="play-chip chip-two">Worth the price?</div>
+          <div class="play-chip chip-three">Still want it later?</div>
+        </div>
+      </section>
+
+      <section class="home-paths" aria-label="How TruWorth helps over time">
+        <div class="home-path path-assess"><span>01</span><strong>Check before you buy</strong><small>Put the purchase through TruWorth before the money leaves your account.</small></div>
+        <div class="home-path path-search"><span>02</span><strong>Record what you did</strong><small>If you buy it, mark it bought. If you leave it, leave it.</small></div>
+        <div class="home-path path-link"><span>03</span><strong>See your patterns</strong><small>Over time, your history shows what you consider, what you buy and what actually works for you.</small></div>
+      </section>
+
+      ${records.length ? `
+        <section class="buyer-teaser">
+          <div>
+            <p class="kicker">Your history</p>
+            <h2>${records.length} checked · ${bought.length} bought${motive ? ` · mostly ${motiveLabel(motive)}` : ''}</h2>
+            <p>${bought.length ? `${conversion}% of the products you have checked are recorded as purchases.` : 'You have started building a useful record of the things you consider.'}</p>
+          </div>
+          <a class="secondary-button" href="insights.html">See my insights</a>
+        </section>` : `
+        <section class="buyer-teaser empty-profile">
+          <div>
+            <p class="kicker">More useful over time</p>
+            <h2>One check helps now. Your history helps next time.</h2>
+            <p>Record what you buy and, later, whether it lived up to expectations. That is where the useful patterns start.</p>
+          </div>
+        </section>`}
+
+      <section class="home-library">
+        <div class="home-library-head"><h2>${records.length ? 'Recent checks' : 'Start with something you are genuinely considering'}</h2>${records.length ? '<a href="watchlist.html">View saved</a>' : ''}</div>
+        ${records.length ? `<div class="product-list">${ranked.map((record, index) => productRow(record, index + 1)).join('')}</div>` : `<div class="home-empty"><p>A phone. Trainers. Headphones. A handbag. A coffee machine. Pick something you are actually thinking about buying.</p><a class="text-button" href="assess.html">Check your first purchase →</a></div>`}
+      </section>
+    `, { compact: true });
   };
-  const normalisePattern = (value) => {
-    const text = String(value || '').trim();
-    if (!text || /^(Exploring|Still learning)$/i.test(text)) return 'Not enough data';
-    if (/^Joy-led$/i.test(text)) return 'For enjoyment';
-    if (/^Impulse-led$/i.test(text)) return 'Impulse/status';
-    return text;
+
+  const baseResultPage = resultPage;
+  resultPage = function resultPageV23() {
+    baseResultPage();
+    const record = findRecord();
+    const target = document.querySelector('.result-layout');
+    if (!record || !target || document.getElementById('tw23NextStep')) return;
+
+    const bought = record.status === 'purchased' || Boolean(purchases?.[record.id]);
+    const section = document.createElement('section');
+    section.id = 'tw23NextStep';
+    section.className = 'tw-access-note';
+    section.innerHTML = bought
+      ? '<strong>Keep the loop going.</strong> Come back later and update how much you actually used and enjoyed it. That makes your Insights more useful.'
+      : '<strong>If you buy it, mark it bought.</strong> Later, tell TruWorth how it actually turned out. Your history becomes more useful with every real outcome.';
+    target.insertAdjacentElement('afterend', section);
   };
 
-  function buyingHeadline() {
-    const bought = records.filter((r) => r.status === 'purchased' || purchases[r.id]);
-    if (!records.length) return 'Complete a few assessments to start seeing your buying patterns.';
-    if (!bought.length) return 'Mark something as bought when you purchase it. TruWorth will then compare what you consider with what you actually buy.';
-    return 'Compare the products you consider with the products you actually buy.';
-  }
+  const basePlansPage = plansPage;
+  plansPage = function plansPageV23() {
+    basePlansPage();
 
-  function fixHome() {
-    if (page() !== 'home') return;
-    const trust = document.querySelector('.tw-home-trust');
-    if (trust) {
-      const wanted = '<span><b>✓</b>Free account</span><span><b>✓</b>About 2 minutes</span><span><b>✓</b>Clear 0–100 score</span>';
-      if (trust.innerHTML !== wanted) trust.innerHTML = wanted;
-    }
-    document.querySelectorAll('.tw-stat-strip article').forEach((card) => {
-      const label = card.querySelector('b');
-      const value = card.querySelector('strong');
-      const note = card.querySelector('small');
-      if (/Try it first/i.test(label?.textContent || '') || /No login/i.test(value?.textContent || '')) {
-        setText(value, 'Free');
-        setText(label, 'Your account');
-        setText(note, 'Keeps your assessments saved');
-      }
-    });
-    const teaser = document.querySelector('.buyer-teaser');
-    if (teaser) {
-      setText(teaser.querySelector('.kicker'), 'Your buying patterns');
-      setText(teaser.querySelector('h2'), 'What catches your eye vs what you buy');
-      setText(teaser.querySelector('p:not(.kicker)'), 'TruWorth compares the products you assess with the ones you mark as bought.');
-      const link = teaser.querySelector('a');
-      if (link) setText(link, 'View my patterns');
-    }
-  }
+    const intro = document.querySelector('.page-intro div > p:last-child');
+    if (intro) intro.textContent = 'Use Free to check purchases. TruWorth+ turns those checks into a deeper picture of how you buy.';
 
-  function fixInsights() {
-    if (page() !== 'insights') return;
-    setText(document.querySelector('.page-intro h1'), 'Your buying patterns');
-    setText(document.querySelector('.page-intro div > p:last-child'), 'See how the products you consider compare with the products you actually buy.');
-
-    const hero = document.querySelector('.buyer-profile-hero');
-    if (hero) {
-      setText(hero.querySelector('.kicker'), 'Your buying patterns');
-      setText(hero.querySelector('#buyerHeadline'), buyingHeadline());
-      const bubbles = [...hero.querySelectorAll('.identity-bubble')];
-      if (bubbles[0]) {
-        setText(bubbles[0].querySelector('span'), 'What you consider');
-        setText(bubbles[0].querySelector('strong'), normalisePattern(bubbles[0].querySelector('strong')?.textContent));
-        setText(bubbles[0].querySelector('small'), 'From your saved assessments');
-      }
-      if (bubbles[1]) {
-        setText(bubbles[1].querySelector('span'), 'What you buy');
-        setText(bubbles[1].querySelector('strong'), normalisePattern(bubbles[1].querySelector('strong')?.textContent));
-        setText(bubbles[1].querySelector('small'), 'From purchases you mark as bought');
-      }
-    }
-
-    const loading = document.querySelector('.premium-loading');
-    setText(loading, 'Building your buying insights…');
-    const overlay = document.querySelector('.steam-overlay');
-    if (overlay) {
-      setText(overlay.querySelector('p'), 'See more from your purchase history.');
-      setText(overlay.querySelector('h3'), 'Unlock deeper buying insights');
-      setText(overlay.querySelector('span'), 'See financial habits, repeat purchase patterns and personalised guidance.');
-    }
-    const premiumHead = document.querySelector('.premium-unlocked-head');
-    if (premiumHead) {
-      setText(premiumHead.querySelector('span'), 'TruWorth+ buying insights');
-      const strong = premiumHead.querySelector('strong');
-      if (strong) {
-        const text = strong.textContent || '';
-        const parts = text.split('·').map((x) => x.trim());
-        const left = normalisePattern(parts[0]?.replace(/Wants You|What you consider:?/gi, '').trim());
-        const right = normalisePattern(parts[1]?.replace(/Real Buyer|What you buy:?/gi, '').trim());
-        setText(strong, `What you consider: ${left} · What you buy: ${right}`);
-      }
-    }
-  }
-
-  function fixAccount() {
-    if (page() !== 'account' || !user) return;
-    const personality = document.querySelector('.profile-personality');
-    if (personality) {
-      setText(personality.querySelector('.kicker'), 'Buying patterns');
-      setText(personality.querySelector('h2'), 'What you consider vs what you buy');
-      setText(personality.querySelector('p:not(.kicker)'), buyingHeadline());
-      const link = personality.querySelector('a');
-      if (link) setText(link, 'View my patterns');
-    }
-  }
-
-  function fixPlans() {
-    if (page() !== 'plans') return;
-    setText(document.querySelector('.page-intro div > p:last-child'), 'Use Free for purchase scores. TruWorth+ adds deeper buying insights and unlimited history.');
     document.querySelectorAll('.membership-row').forEach((row) => {
       const name = row.querySelector('.membership-name span')?.textContent?.trim();
       const heading = row.querySelector('.membership-copy h2');
       const copy = row.querySelector('.membership-copy p');
       if (name === 'Free') {
-        setText(copy, 'Core assessments, saved history, comparisons and a simple summary of your buying patterns.');
+        if (heading) heading.textContent = 'Make better purchase decisions';
+        if (copy) copy.textContent = 'Unlimited assessments, product comparisons and up to 5 saved products at a time.';
       }
       if (name === 'TruWorth+') {
-        setText(heading, 'See deeper buying patterns');
-        setText(copy, 'Compare what you consider with what you actually buy, see financial-fit habits and recurring purchase patterns, and keep unlimited saved history.');
+        if (heading) heading.textContent = 'Build a better buying history';
+        if (copy) copy.textContent = 'Unlimited saved history, deeper insights, financial context and growing Member Benefits.';
       }
     });
-  }
-
-  function removePersonaJargon() {
-    document.querySelectorAll('main').forEach((root) => {
-      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-      const nodes = [];
-      while (walker.nextNode()) nodes.push(walker.currentNode);
-      nodes.forEach((node) => {
-        let text = node.nodeValue || '';
-        text = text.replace(/Wants You vs Real Buyer You/g, 'Your buying patterns')
-          .replace(/Wants You/g, 'What you consider')
-          .replace(/Real Buyer You/g, 'What you buy')
-          .replace(/Wants Self/g, 'what you consider')
-          .replace(/Real Buyer Me/g, 'what you buy');
-        if (text !== node.nodeValue) node.nodeValue = text;
-      });
-    });
-  }
-
-  function apply() {
-    if (applying) return;
-    applying = true;
-    try {
-      fixHome();
-      fixInsights();
-      fixAccount();
-      fixPlans();
-      removePersonaJargon();
-    } finally {
-      applying = false;
-    }
-  }
-
-  const observer = new MutationObserver(() => queueMicrotask(apply));
-  observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
-  window.addEventListener('truworth:release-ready', () => {
-    apply();
-    [120, 500, 1200, 2500].forEach((delay) => setTimeout(apply, delay));
-  }, { once: true });
-  if (window.__TRUWORTH_RELEASE_READY__) apply();
+  };
 })();

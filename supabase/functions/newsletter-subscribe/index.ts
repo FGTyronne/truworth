@@ -58,6 +58,11 @@ function hex(buffer: ArrayBuffer) {
   return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+function randomToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 async function hmacHex(secret: string, value: string) {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -89,14 +94,18 @@ async function enforceRateLimit(admin: ReturnType<typeof createClient>, ipHash: 
   return Number(shortWindow.count || 0) < SHORT_WINDOW_LIMIT && Number(daily.count || 0) < DAILY_LIMIT;
 }
 
-async function syncResend(email: string) {
+async function syncResend(email: string, unsubscribeToken: string) {
   const key = Deno.env.get('RESEND_API_KEY') || '';
   if (!key) throw new Error('Resend API key unavailable');
   const resend = new Resend(key);
 
   const existing = await resend.contacts.get({ email });
   if (existing.data?.id) {
-    const updated = await resend.contacts.update({ email, unsubscribed: false });
+    const updated = await resend.contacts.update({
+      email,
+      unsubscribed: false,
+      properties: { unsubscribe_token: unsubscribeToken },
+    });
     if (updated.error) throw new Error(`Resend contact update failed: ${updated.error.message}`);
 
     const segment = await resend.contacts.segments.add({ email, segmentId: SEGMENT_ID });
@@ -119,6 +128,7 @@ async function syncResend(email: string) {
   const created = await resend.contacts.create({
     email,
     unsubscribed: false,
+    properties: { unsubscribe_token: unsubscribeToken },
     segments: [{ id: SEGMENT_ID }],
     topics: [{ id: TOPIC_ID, subscription: 'opt_in' }],
   });
@@ -158,12 +168,13 @@ Deno.serve(async (req: Request) => {
     const now = new Date().toISOString();
     const { data: existing, error: existingError } = await admin
       .from('newsletter_subscribers')
-      .select('id,status')
+      .select('id,status,unsubscribe_token')
       .eq('email', email)
       .maybeSingle();
     if (existingError) throw existingError;
 
     let subscriberId: string;
+    const unsubscribeToken = existing?.unsubscribe_token || randomToken();
     const eventType = existing?.status === 'unsubscribed' ? 'resubscribe' : 'subscribe';
     if (existing?.id) {
       const update: Record<string, unknown> = {
@@ -174,6 +185,9 @@ Deno.serve(async (req: Request) => {
         source_context: 'domain-change-popup',
         ip_hash: ipHash,
         resend_sync_status: 'pending',
+        unsubscribe_token: unsubscribeToken,
+        unsubscribe_reason: null,
+        unsubscribe_reason_detail: null,
         unsubscribed_at: null,
         updated_at: now,
       };
@@ -192,6 +206,7 @@ Deno.serve(async (req: Request) => {
         user_id: userId,
         ip_hash: ipHash,
         resend_sync_status: 'pending',
+        unsubscribe_token: unsubscribeToken,
       }).select('id').single();
       if (error || !data?.id) throw error || new Error('Subscriber record unavailable');
       subscriberId = data.id;
@@ -207,7 +222,7 @@ Deno.serve(async (req: Request) => {
     if (eventError) throw eventError;
 
     try {
-      const resendContactId = await syncResend(email);
+      const resendContactId = await syncResend(email, unsubscribeToken);
       const { error: syncUpdateError } = await admin.from('newsletter_subscribers').update({
         resend_contact_id: resendContactId,
         resend_sync_status: 'synced',

@@ -26,8 +26,9 @@
   function normaliseNavigation() {
     const footer = document.querySelector('.site-footer');
     if (footer) {
-      footer.innerHTML = [
+      const wanted = [
         '<span class="tw-footer-note">TruWorth · Buy with your eyes open.</span>',
+        '<nav class="tw-footer-links" aria-label="Legal, privacy and support">',
         '<a href="/privacy.html">Privacy</a>',
         '<a href="/terms.html">Terms</a>',
         '<a href="/cookies.html">Cookies</a>',
@@ -38,9 +39,12 @@
         '<a href="/commercial-disclosure.html">Commercial disclosure</a>',
         '<a href="/plans.html">Membership</a>',
         '<a href="/settings.html">Settings</a>',
-        '<button class="tw-cookie-link" type="button" data-tw-cookie-settings>Cookie settings</button>'
+        '<button class="tw-cookie-link" type="button" data-tw-cookie-settings>Cookie settings</button>',
+        '</nav>'
       ].join('');
-      footer.dataset.footerVersion = 'tw33';
+      if (footer.dataset.footerVersion !== 'tw33b' || footer.innerHTML !== wanted) footer.innerHTML = wanted;
+      footer.dataset.footerVersion = 'tw33b';
+      footer.dataset.launchLegal = '1';
     }
 
     document.querySelectorAll('.bottom-nav a, .site-footer a, .site-footer button').forEach((node) => {
@@ -53,6 +57,11 @@
     document.body?.classList.add('tw-playful');
     restoreProductArtwork();
     normaliseNavigation();
+  }
+
+  function settleVisuals() {
+    applyVisuals();
+    [120, 560, 1320].forEach((delay) => setTimeout(applyVisuals, delay));
   }
 
   function showAuthFace(face) {
@@ -136,7 +145,7 @@
     };
   }
 
-  window.addEventListener('truworth:routed', () => requestAnimationFrame(applyVisuals));
-  window.addEventListener('truworth:release-ready', () => requestAnimationFrame(applyVisuals), { once: true });
-  if (window.__TRUWORTH_RELEASE_READY__) requestAnimationFrame(applyVisuals);
+  window.addEventListener('truworth:routed', () => requestAnimationFrame(settleVisuals));
+  window.addEventListener('truworth:release-ready', () => requestAnimationFrame(settleVisuals), { once: true });
+  if (window.__TRUWORTH_RELEASE_READY__) requestAnimationFrame(settleVisuals);
 })();

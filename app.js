@@ -1,5 +1,5 @@
 (async()=>{
-  const version='20261016l';
+  const version='20261016m';
   const files=[
     'core-v2.js',
     'boot-gate.js',
@@ -17,7 +17,6 @@
     'billing-v15.js',
     'voucher-ui-v16.js',
     'experience-v17.js',
-    'experience-v18.js',
     'copy-v19.js',
     'trial-v20.js',
     'monetization-v22.js',

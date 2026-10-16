@@ -35,10 +35,11 @@ assert(/segments: \[\{ id: SEGMENT_ID \}\]/.test(subscribeFn), 'Subscribe functi
 assert(/subscription: 'opt_in'/.test(subscribeFn), 'Subscribe function must explicitly opt contacts into the newsletter topic.');
 assert(/company_website/.test(subscribeFn), 'Subscribe form must retain a honeypot field.');
 assert(/SHORT_WINDOW_LIMIT/.test(subscribeFn) && /DAILY_LIMIT/.test(subscribeFn), 'Subscribe endpoint must retain abuse limits.');
+assert(!/unsubscribed:\s*false/.test(subscribeFn), 'Newsletter subscription must not globally change a Resend contact suppression state.');
 
 assert(/subscription: 'opt_out'/.test(unsubscribeFn), 'Unsubscribe function must opt the newsletter topic out.');
 assert(/segments\.remove/.test(unsubscribeFn), 'Unsubscribe function must remove contacts from the newsletter segment.');
-assert(/unsubscribed: true/.test(unsubscribeFn), 'Unsubscribe function must suppress future broadcasts.');
+assert(!/unsubscribed:\s*true/.test(unsubscribeFn), 'Newsletter opt-out must not globally suppress unrelated Resend mailings.');
 assert(/unsubscribe_reason/.test(unsubscribeFn), 'Unsubscribe function must store the selected reason.');
 assert(/Account and transactional emails are unaffected/.test(unsubscribeFn), 'Unsubscribe response must distinguish transactional email.');
 

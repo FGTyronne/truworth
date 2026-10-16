@@ -1,5 +1,5 @@
 (async()=>{
-  const version='20261016a';
+  const version='20261015h';
   const files=[
     'core-v2.js',
     'boot-gate.js',
@@ -35,23 +35,16 @@
     'launch-hardening-v31.js',
     'commercial-v32.js'
   ];
-
-  // Start every runtime download immediately. Setting async=false keeps
-  // execution in insertion order while allowing the browser to fetch the
-  // files in parallel, avoiding the previous 30+ request waterfall.
-  const loads=[];
   for(const file of files){
-    loads.push(new Promise((resolve,reject)=>{
+    await new Promise((resolve,reject)=>{
       const s=document.createElement('script');
       s.src=`${file}?v=${version}`;
       s.async=false;
       s.onload=resolve;
       s.onerror=()=>reject(new Error(`Could not load ${file}`));
       document.head.appendChild(s);
-    }));
+    });
   }
-  await Promise.all(loads);
-
   window.__TRUWORTH_RELEASE_READY__=true;
   window.dispatchEvent(new CustomEvent('truworth:release-ready'));
 })().catch((error)=>{

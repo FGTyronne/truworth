@@ -103,7 +103,6 @@ async function syncResend(email: string, unsubscribeToken: string) {
   if (existing.data?.id) {
     const updated = await resend.contacts.update({
       email,
-      unsubscribed: false,
       properties: { unsubscribe_token: unsubscribeToken },
     });
     if (updated.error) throw new Error(`Resend contact update failed: ${updated.error.message}`);
@@ -127,7 +126,6 @@ async function syncResend(email: string, unsubscribeToken: string) {
 
   const created = await resend.contacts.create({
     email,
-    unsubscribed: false,
     properties: { unsubscribe_token: unsubscribeToken },
     segments: [{ id: SEGMENT_ID }],
     topics: [{ id: TOPIC_ID, subscription: 'opt_in' }],

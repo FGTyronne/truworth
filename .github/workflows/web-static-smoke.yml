@@ -32,6 +32,9 @@ jobs:
           node --check ux-v33.js
           node --check footer-v35.js
           node --check insights-benefits-v36.js
+          node --check benefits-v37.js
+          node --check newsletter-v38.js
+          node --check unsubscribe.js
       - name: Guard active runtime layers
         run: |
           ! grep -F "'experience-v18.js'" app.js
@@ -41,6 +44,8 @@ jobs:
           grep -F "'ux-v33.js'" app.js >/dev/null
           grep -F "'footer-v35.js'" app.js >/dev/null
           grep -F "'insights-benefits-v36.js'" app.js >/dev/null
+          grep -F "'benefits-v37.js'" app.js >/dev/null
+          grep -F "'newsletter-v38.js'" app.js >/dev/null
           grep -F '__TRUWORTH_LEGACY_V18_DISABLED__' experience-v18.js >/dev/null
           grep -F '__TRUWORTH_LEGACY_V21_DISABLED__' experience-v21.js >/dev/null
           grep -F '__TRUWORTH_LEGACY_V29_DISABLED__' navigation-v29.js >/dev/null
@@ -55,7 +60,12 @@ jobs:
           test -f dist-web/theme-v33.css
           test -f dist-web/footer-v35.js
           test -f dist-web/insights-benefits-v36.js
+          test -f dist-web/benefits-v37.js
+          test -f dist-web/newsletter-v38.js
           test -f dist-web/theme-v36.css
+          test -f dist-web/theme-v38.css
+          test -f dist-web/unsubscribe.html
+          test -f dist-web/unsubscribe.js
           test -f dist-web/assets/hero-products.webp
           test -f dist-web/favicon.svg
           test -f dist-web/robots.txt
@@ -93,3 +103,5 @@ jobs:
         run: node scripts/access-commercial-contract-smoke.mjs
       - name: Run Insights and Benefits contract checks
         run: node scripts/insights-benefits-contract-smoke.mjs
+      - name: Run newsletter contract checks
+        run: node scripts/newsletter-contract-smoke.mjs

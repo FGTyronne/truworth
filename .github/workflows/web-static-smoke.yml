@@ -27,6 +27,8 @@ jobs:
           node --check admin-partners.js
           node --check launch-hardening-v31.js
           node --check commercial-v32.js
+          node --check consent-v25.js
+          node --check consent-route-v25.js
       - name: Build Render artifact
         run: bash render-build.sh
       - name: Verify Render artifact
@@ -53,6 +55,8 @@ jobs:
           grep -R -F "app.css?v=$GITHUB_SHA" dist-web/*.html >/dev/null
       - name: Run static launch checks
         run: node scripts/web-static-smoke.mjs
+      - name: Run consent contract checks
+        run: node scripts/consent-contract-smoke.mjs
       - name: Run public SEO checks
         run: node scripts/public-seo-smoke.mjs
       - name: Run recommendation outcome checks

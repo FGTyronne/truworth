@@ -31,6 +31,11 @@ jobs:
           node --check consent-route-v25.js
           node --check ux-v33.js
           node --check footer-nav-v34.js
+      - name: Guard active runtime layers
+        run: |
+          ! grep -F "'experience-v18.js'" app.js
+          grep -F "'ux-v33.js'" app.js >/dev/null
+          grep -F "'footer-nav-v34.js'" app.js >/dev/null
       - name: Build Render artifact
         run: bash render-build.sh
       - name: Verify Render artifact
